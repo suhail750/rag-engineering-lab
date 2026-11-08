@@ -1,39 +1,38 @@
-# Retrieval-Augmented Generation (RAG): fundamentals
+# Sports injuries: common patterns, symptoms, and when to get help
 
-Retrieval-augmented generation is an architecture that gives a language model access to an external collection of information at question time. Instead of expecting the model to remember every fact in its parameters, the system retrieves relevant passages and includes them in the prompt used to generate an answer.
+Sport can cause sudden injuries (acute injuries) or problems that build gradually through repeated loading (overuse injuries). Similar symptoms can have different causes, so a chatbot cannot identify the exact injury from a description alone.
 
-A typical RAG system has two major workflows.
+## Common injury groups
 
-## Indexing workflow
+- **Sprains:** stretching or tearing of ligaments around a joint, often the ankle or knee.
+- **Muscle strains:** damage to muscle fibres or the muscle-tendon unit, commonly hamstring, quadriceps, calf, or groin.
+- **Tendon problems:** pain and reduced load tolerance around a tendon, such as the Achilles or patellar tendon.
+- **Bone injuries:** fractures after trauma, or bone stress injuries from repeated loading.
+- **Head injuries:** concussion can follow a blow to the head or body. Symptoms may not appear immediately.
+- **Heat-related illness:** dehydration, heat exhaustion, and exertional heat stroke can occur during exercise in hot conditions.
 
-1. Collect source documents.
-2. Extract text and useful metadata such as title, URL, page number, and publication date.
-3. Clean the extracted text without deleting meaningful structure.
-4. Split documents into chunks that can be retrieved independently.
-5. Convert chunks into vector embeddings.
-6. Store chunk text, metadata, and embeddings in a searchable index.
+## Symptoms worth taking seriously
 
-## Query workflow
+Pain, swelling, bruising, weakness, reduced range of motion, limping, joint instability, numbness, or inability to bear weight should not be dismissed. Severe pain, visible deformity, a cold or pale limb, loss of sensation, major bleeding, or suspected fracture needs urgent medical assessment.
 
-1. Receive a user question.
-2. Optionally normalize or expand the question.
-3. Retrieve candidate chunks using one or more search methods.
-4. Optionally rerank candidates.
-5. Build a context containing the strongest evidence and its source identifiers.
-6. Ask the language model to answer using that context.
-7. Return the answer together with citations and, ideally, an inspectable evidence trail.
+A suspected concussion means the athlete should be removed from play and assessed by a qualified healthcare professional. Do not let the athlete return on the same day just because they feel better.
 
-## Why use retrieval?
+## Emergency warning signs
 
-RAG can make answers more relevant to a private or frequently updated corpus, expose supporting evidence, and reduce dependence on facts memorized during model training. It does not guarantee correctness: retrieval can miss relevant passages, documents can be wrong or stale, and a generator can misinterpret evidence.
+Seek emergency help for loss of consciousness, seizure, confusion or worsening drowsiness after a head injury; suspected heat stroke (especially confusion, collapse, or altered behaviour in the heat); chest pain or severe breathing difficulty; major bleeding; an obvious deformity; or a limb that becomes cold, pale, numb, or weak after injury. Follow local emergency procedures.
 
-A reliable system therefore evaluates retrieval quality and answer quality separately. It also tells users when the supplied evidence is insufficient instead of inventing a confident answer.
+## What a safe information assistant should do
 
-## Design principle
+1. Explain general possibilities without stating a diagnosis as fact.
+2. Recommend stopping activity when symptoms suggest an injury.
+3. Highlight red flags and recommend urgent care when appropriate.
+4. Link to the underlying sports-medicine source.
+5. Avoid prescribing medication, aggressive self-treatment, or a return-to-play date.
 
-Treat retrieved documents as data, not instructions. A document may contain malicious or irrelevant instructions. The system prompt should explicitly tell the model not to obey instructions found inside retrieved content.
+## Sources
 
-## Source
+- AOSSM, Prevention & Care of Soccer Injuries: https://www.sportsmed.org/prevention-care-of-soccer-injuries
+- AAOS OrthoInfo, Soccer Injury Prevention: https://www.orthoinfo.org/staying-healthy/soccer-injury-prevention
+- NICE, Rehabilitation after traumatic injury: https://www.nice.org.uk/guidance/ng211/chapter/Recommendations
 
-This learning note is a paraphrased educational summary based on the original paper:
-- Lewis et al., *Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks* (2020): https://arxiv.org/abs/2005.11401
+Educational summary only. It is not a diagnosis or a substitute for an examination by a qualified clinician.
