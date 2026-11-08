@@ -7,14 +7,17 @@ from pathlib import Path
 
 import streamlit as st
 
-from raglab.chunking import chunk_text
 from raglab.config import APP_TITLE, DATA_DIR, DEFAULT_CHUNK_OVERLAP, DEFAULT_CHUNK_SIZE
 from raglab.embeddings import EmbeddingService
 from raglab.evaluation import evaluate_retrieval
 from raglab.generation import answer_question
+from raglab.ingestion import prepare_chunks
 from raglab.loaders import load_uploaded_file
 from raglab.retrieval import bm25_search, dense_search, hybrid_search, rerank_results
 from raglab.storage import load_index, save_index
+
+ROOT_DIR = Path(__file__).resolve().parent
+SAMPLE_DIR = ROOT_DIR / "sample_data"
 
 st.set_page_config(page_title=APP_TITLE, page_icon="🧪", layout="wide")
 st.markdown("""
@@ -34,9 +37,43 @@ st.markdown("""
 
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
+
 @st.cache_resource(show_spinner="Loading embedding model (first run downloads it)...")
 def get_embedder(model_name: str) -> EmbeddingService:
     return EmbeddingService(model_name)
+
+
+def load_sample_documents() -> list[tuple[str, str, dict]]:
+    manifest_path = SAMPLE_DIR / "sources.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    documents = []
+    for item in manifest.get("documents", []):
+        file_path = SAMPLE_DIR / item["file"]
+        if not file_path.is_file():
+            raise FileNotFoundError(f"Sample knowledge file is missing: {item['file']}")
+        documents.append((
+            item["file"],
+            file_path.read_text(encoding="utf-8"),
+            {
+                "title": item.get("title", item["file"]),
+                "source_url": item.get("source_url", ""),
+                "publisher": item.get("publisher", ""),
+                "source_type": item.get("source_type", "web reference"),
+                "curated_pack": manifest.get("pack_name", "RAG starter pack"),
+            },
+        ))
+    return documents
+
+
+def show_evidence(results: list[dict]) -> None:
+    for rank, result in enumerate(results, 1):
+        st.markdown(f"**[{rank}] {result.get('source', 'Unknown')}** · score: {result.get('score', 0):.4f}")
+        st.write(result.get("text", ""))
+        metadata = result.get("metadata", {})
+        source_url = metadata.get("source_url")
+        if source_url:
+            st.markdown(f"[Original source: {metadata.get('publisher') or 'Open source'}]({source_url})")
+
 
 if "index" not in st.session_state:
     st.session_state.index = load_index()
@@ -45,6 +82,7 @@ if "messages" not in st.session_state:
 
 index = st.session_state.index
 chunks = index.get("chunks", [])
+all_sources = sorted({c.get("source", "unknown") for c in chunks})
 
 with st.sidebar:
     st.title("⚙️ Lab settings")
@@ -55,86 +93,98 @@ with st.sidebar:
     retrieval_mode = st.selectbox("Retrieval strategy", ["Hybrid", "Dense", "BM25"])
     top_k = st.slider("Final results (top-k)", 1, 12, 5)
     use_reranker = st.checkbox("Use cross-encoder reranker", value=False)
+    selected_sources = st.multiselect("Filter knowledge sources", all_sources, default=all_sources)
     groq_key = st.text_input("Groq API key (optional)", value=os.getenv("GROQ_API_KEY", ""), type="password")
     groq_model = st.text_input("Groq model", "llama-3.3-70b-versatile")
     st.divider()
-    st.caption("Local index stored in the app's data directory.")
+    st.caption("Local index is stored in the app's data directory.")
     if st.button("Clear local knowledge base", use_container_width=True):
         st.session_state.index = {"chunks": [], "created_at": None}
         st.session_state.messages = []
         save_index(st.session_state.index)
         st.rerun()
 
+active_chunks = [c for c in chunks if c.get("source", "unknown") in selected_sources]
+
 tab_chat, tab_docs, tab_eval, tab_about = st.tabs(["💬 Chat", "📚 Knowledge base", "📊 Evaluation", "🧭 How it works"])
 
 with tab_docs:
     st.subheader("Add knowledge sources")
-    st.write("Upload files to extract text, split it into chunks, and build the local searchable index.")
+    st.write("Start with the curated web-sourced RAG knowledge pack or upload your own files.")
+
+    sample_col, sample_info = st.columns([1, 2])
+    with sample_col:
+        load_sample = st.button("🌐 Load web knowledge pack", type="primary", use_container_width=True)
+    with sample_info:
+        st.caption("Six curated learning notes covering RAG, chunking, retrieval, hybrid search, reranking, and evaluation. Original source URLs are preserved.")
+
+    if load_sample:
+        try:
+            with st.spinner("Loading curated documents and creating embeddings..."):
+                documents = load_sample_documents()
+                embedder = get_embedder(model_name)
+                new_chunks = prepare_chunks(documents, embedder, chunk_size, overlap)
+                replace_sources = {name for name, _, _ in documents}
+                existing = [c for c in chunks if c.get("source") not in replace_sources]
+                st.session_state.index = {"chunks": existing + new_chunks, "created_at": time.time()}
+                save_index(st.session_state.index)
+            st.success(f"Loaded {len(documents)} web-sourced documents into {len(new_chunks)} searchable chunks.")
+            st.rerun()
+        except Exception as exc:
+            st.error(f"Could not load the starter knowledge pack: {exc}")
+
+    st.divider()
     uploads = st.file_uploader(
-        "Choose documents",
+        "Or upload your own documents",
         type=["pdf", "docx", "txt", "md", "csv", "json"],
         accept_multiple_files=True,
         help="Supported formats: PDF, DOCX, TXT, Markdown, CSV, JSON.",
     )
-    col_a, col_b = st.columns([1, 3])
-    with col_a:
-        ingest_clicked = st.button("Process and index", type="primary", disabled=not uploads)
-    with col_b:
-        st.caption("Large files and first-time embedding downloads may take a while.")
-    if ingest_clicked and uploads:
+    if st.button("Process and index uploads", type="secondary", disabled=not uploads):
         try:
-            embedder = get_embedder(model_name)
-            new_chunks = []
-            progress = st.progress(0, text="Preparing documents...")
-            for file_num, uploaded in enumerate(uploads):
-                text, metadata = load_uploaded_file(uploaded.name, uploaded.getvalue())
-                pieces = chunk_text(text, chunk_size=chunk_size, overlap=overlap)
-                for chunk_num, piece in enumerate(pieces):
-                    new_chunks.append({
-                        "text": piece,
-                        "source": uploaded.name,
-                        "chunk_id": f"{uploaded.name}:{chunk_num}",
-                        "metadata": {**metadata, "chunk_index": chunk_num},
-                    })
-                progress.progress((file_num + 1) / len(uploads), text=f"Extracted {uploaded.name}")
-            if not new_chunks:
-                st.warning("No readable text was found in the selected files.")
-            else:
-                vectors = embedder.encode([item["text"] for item in new_chunks])
-                for item, vector in zip(new_chunks, vectors):
-                    item["embedding"] = vector.tolist()
-                existing = [c for c in chunks if c.get("source") not in {u.name for u in uploads}]
+            with st.spinner("Extracting text, chunking, and embedding uploads..."):
+                documents = []
+                for uploaded in uploads:
+                    text, metadata = load_uploaded_file(uploaded.name, uploaded.getvalue())
+                    documents.append((uploaded.name, text, metadata))
+                embedder = get_embedder(model_name)
+                new_chunks = prepare_chunks(documents, embedder, chunk_size, overlap)
+                replace_sources = {name for name, _, _ in documents}
+                existing = [c for c in chunks if c.get("source") not in replace_sources]
                 st.session_state.index = {"chunks": existing + new_chunks, "created_at": time.time()}
                 save_index(st.session_state.index)
-                st.success(f"Indexed {len(new_chunks)} chunks from {len(uploads)} file(s).")
-                st.rerun()
+            st.success(f"Indexed {len(new_chunks)} chunks from {len(documents)} uploaded file(s).")
+            st.rerun()
         except Exception as exc:
             st.error(f"Ingestion failed: {exc}")
-            st.info("Check the file format and try again. For PDFs, make sure text is selectable (scanned PDFs need OCR).")
+            st.info("For scanned PDFs, OCR is needed before text can be extracted.")
 
-if chunks:
-    st.caption(f"{len(chunks)} chunks currently indexed across {len(set(c.get('source', 'unknown') for c in chunks))} source(s).")
-    sources = sorted(set(c.get("source", "unknown") for c in chunks))
-    for source in sources:
-        source_chunks = [c for c in chunks if c.get("source") == source]
-        with st.expander(f"📄 {source} · {len(source_chunks)} chunks"):
-            st.write(source_chunks[0].get("metadata", {}))
-            st.text(source_chunks[0].get("text", "")[:1200])
-else:
-    st.info("Your knowledge base is empty. Add documents in this tab to get started.")
+    if chunks:
+        st.caption(f"{len(chunks)} chunks indexed across {len(all_sources)} source(s). The source filter is in the sidebar.")
+        for source in all_sources:
+            source_chunks = [c for c in chunks if c.get("source") == source]
+            with st.expander(f"📄 {source} · {len(source_chunks)} chunks"):
+                metadata = source_chunks[0].get("metadata", {})
+                st.write(metadata)
+                st.text(source_chunks[0].get("text", "")[:1200])
+                if metadata.get("source_url"):
+                    st.markdown(f"[Open original source]({metadata['source_url']})")
+    else:
+        st.info("Your knowledge base is empty. Load the web knowledge pack or upload documents.")
 
 with tab_chat:
     st.subheader("Ask your knowledge base")
-    st.caption("Answers are grounded in retrieved passages. Open the evidence panel to inspect what the system used.")
+    st.caption("Answers use retrieved passages. Inspect the evidence and open original source links.")
+    if not active_chunks:
+        st.info("Load the starter knowledge pack or upload documents in the Knowledge base tab. Check your source filter too.")
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
             if message.get("sources"):
                 with st.expander("🔎 Retrieved evidence"):
-                    for result in message["sources"]:
-                        st.markdown(f"**[{result['rank']}] {result.get('source', 'Unknown')}** · score: {result.get('score', 0):.4f}")
-                        st.write(result.get("text", ""))
-    question = st.chat_input("Ask a question about your documents...", disabled=not chunks)
+                    show_evidence(message["sources"])
+
+    question = st.chat_input("Ask a question about your documents...", disabled=not active_chunks)
     if question:
         st.session_state.messages.append({"role": "user", "content": question})
         with st.chat_message("user"):
@@ -143,70 +193,76 @@ with tab_chat:
             try:
                 start = time.perf_counter()
                 embedder = get_embedder(model_name)
-                query_vector = embedder.encode([question])[0].tolist()
+                query_vector = embedder.encode([question])[0]
                 if retrieval_mode == "Dense":
-                    results = dense_search(query_vector, chunks, top_k=top_k)
+                    results = dense_search(query_vector, active_chunks, top_k=top_k)
                 elif retrieval_mode == "BM25":
-                    results = bm25_search(question, chunks, top_k=top_k)
+                    results = bm25_search(question, active_chunks, top_k=top_k)
                 else:
-                    results = hybrid_search(question, query_vector, chunks, top_k=top_k)
+                    results = hybrid_search(question, query_vector, active_chunks, top_k=top_k)
                 if use_reranker and results:
                     results = rerank_results(question, results, top_k=top_k)
                 response = answer_question(question, results, api_key=groq_key, model=groq_model)
                 elapsed_ms = (time.perf_counter() - start) * 1000
                 st.markdown(response["answer"])
-                st.caption(f"{retrieval_mode} retrieval · {elapsed_ms:.0f} ms · {len(results)} evidence chunk(s) · {response['mode']}")
-                with st.expander("🔎 Inspect retrieved evidence"):
-                    for rank, result in enumerate(results, 1):
-                        st.markdown(f"**[{rank}] {result.get('source', 'Unknown')}** · score: {result.get('score', 0):.4f}")
-                        st.write(result.get("text", ""))
-                st.session_state.messages.append({"role": "assistant", "content": response["answer"], "sources": [{**r, "rank": i} for i, r in enumerate(results, 1)]})
+                st.caption(f"{retrieval_mode} retrieval · {elapsed_ms:.0f} ms · {len(results)} evidence chunks · {response['mode']}")
+                with st.expander("🔎 Inspect retrieved evidence", expanded=True):
+                    show_evidence(results)
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": response["answer"],
+                    "sources": [{**r, "rank": i} for i, r in enumerate(results, 1)],
+                })
             except Exception as exc:
                 st.error(f"Could not answer this question: {exc}")
-                st.info("If this is the first run, wait for the embedding model to finish downloading and retry.")
+                st.info("Check the model download, API key, and selected knowledge sources, then retry.")
 
 with tab_eval:
     st.subheader("Retrieval evaluation")
-    st.write("Measure whether relevant source documents appear in the retrieved top-k results. Upload a JSON test set.")
-    example = [{"question": "What is the main idea?", "relevant_sources": ["example.pdf"]}]
-    st.download_button("Download example evaluation JSON", json.dumps(example, indent=2), "evaluation_example.json", "application/json")
+    st.write("Use labelled questions to compare retrieval quality. The included dataset is aligned with the starter knowledge pack.")
+    example_path = SAMPLE_DIR / "evaluation.json"
+    if example_path.is_file():
+        st.download_button("Download starter evaluation set", example_path.read_text(encoding="utf-8"), "rag_evaluation.json", "application/json")
     eval_file = st.file_uploader("Evaluation dataset (JSON)", type=["json"], key="eval_upload")
-    if eval_file and st.button("Run retrieval evaluation", type="primary"):
+    if eval_file and st.button("Run retrieval evaluation", type="primary", disabled=not active_chunks):
         try:
             dataset = json.loads(eval_file.getvalue().decode("utf-8"))
-            if not isinstance(dataset, list):
-                raise ValueError("The evaluation file must contain a JSON list.")
-            embedder = get_embedder(model_name)
+            if not isinstance(dataset, list) or not dataset:
+                raise ValueError("The evaluation file must contain a non-empty JSON list.")
             rows = []
+            embedder = get_embedder(model_name)
             for item in dataset:
-                q = str(item["question"])
-                relevant = item["relevant_sources"]
-                qvec = embedder.encode([q])[0].tolist()
+                if not isinstance(item, dict) or not isinstance(item.get("question"), str) or not isinstance(item.get("relevant_sources"), list):
+                    raise ValueError("Each test case needs a question string and relevant_sources list.")
+                q = item["question"]
+                qvec = embedder.encode([q])[0]
                 if retrieval_mode == "Dense":
-                    found = dense_search(qvec, chunks, top_k=top_k)
+                    found = dense_search(qvec, active_chunks, top_k=top_k)
                 elif retrieval_mode == "BM25":
-                    found = bm25_search(q, chunks, top_k=top_k)
+                    found = bm25_search(q, active_chunks, top_k=top_k)
                 else:
-                    found = hybrid_search(q, qvec, chunks, top_k=top_k)
-                rows.append({"relevant_sources": relevant, "retrieved_sources": [r.get("source") for r in found]})
+                    found = hybrid_search(q, qvec, active_chunks, top_k=top_k)
+                rows.append({"relevant_sources": item["relevant_sources"], "retrieved_sources": [r.get("source") for r in found]})
             metrics = evaluate_retrieval(rows, k=top_k)
-            c1, c2, c3 = st.columns(3)
-            c1.metric(f"Hit Rate@{top_k}", f"{metrics['hit_rate']:.1%}")
-            c2.metric(f"Recall@{top_k}", f"{metrics['recall']:.1%}")
-            c3.metric(f"MRR@{top_k}", f"{metrics['mrr']:.3f}")
-            st.caption(f"Evaluated {len(rows)} question(s). These are retrieval metrics, not answer-quality scores.")
+            cols = st.columns(5)
+            cols[0].metric(f"Hit Rate@{top_k}", f"{metrics['hit_rate']:.1%}")
+            cols[1].metric(f"Recall@{top_k}", f"{metrics['recall']:.1%}")
+            cols[2].metric(f"Precision@{top_k}", f"{metrics['precision']:.1%}")
+            cols[3].metric(f"MRR@{top_k}", f"{metrics['mrr']:.3f}")
+            cols[4].metric(f"nDCG@{top_k}", f"{metrics['ndcg']:.3f}")
+            st.caption(f"Evaluated {len(rows)} questions. These metrics measure source retrieval, not answer correctness.")
         except Exception as exc:
             st.error(f"Evaluation failed: {exc}")
 
 with tab_about:
     st.subheader("The RAG pipeline")
     st.markdown("""
-    1. **Load:** extract text and metadata from uploaded files.
+    1. **Load:** extract text and metadata from uploaded files or the curated web starter pack.
     2. **Chunk:** split text into overlapping passages.
     3. **Embed:** map passages and questions into vectors.
     4. **Retrieve:** dense search finds semantic matches; BM25 finds lexical matches; hybrid search fuses ranked lists with Reciprocal Rank Fusion.
     5. **Rerank (optional):** a cross-encoder scores query-passage pairs for relevance.
-    6. **Generate:** the LLM receives only the selected context and is instructed to cite evidence. Without an API key, an extractive fallback is used.
-    7. **Evaluate:** labelled source references let you calculate Hit Rate, Recall@k, and Mean Reciprocal Rank.
+    6. **Generate:** the LLM receives selected context and is instructed to cite evidence. Without an API key, an extractive fallback is used.
+    7. **Evaluate:** labelled questions measure Hit Rate, Recall@k, Precision@k, MRR, and nDCG.
     """)
-    st.warning("This is an educational single-user starter. A public multi-user deployment needs authentication, per-user indexes, quotas, durable storage, rate limiting, and abuse protection before handling real user data.")
+    st.warning("This is an educational single-user app. Before public multi-user use, add authentication, per-user indexes, quotas, durable storage, rate limiting, and abuse protection. Never upload private or confidential documents to an open public deployment.")
