@@ -202,10 +202,10 @@ with ask_tab:
 
 
 with knowledge_tab:
-    st.subheader("What's inside our knowledge base?")
+    st.subheader("Sports health knowledge library")
     st.write(
-        "The notes are original, beginner-friendly summaries based on public research "
-        "papers and technical documentation. Open the original links to read the source material."
+        "These are beginner-friendly educational summaries based on public sports-medicine guidance, "
+        "clinical education, and consensus statements. Open the original links to read the sources."
     )
 
     manifest = json.loads((SAMPLE_DIR / "sources.json").read_text(encoding="utf-8"))
@@ -218,12 +218,12 @@ with knowledge_tab:
     st.divider()
     st.markdown("**Topics covered**")
     st.markdown(
-        "- RAG fundamentals and the indexing/query workflows\n"
-        "- Document chunking and metadata\n"
-        "- Dense retrieval and BM25\n"
-        "- Hybrid search and Reciprocal Rank Fusion\n"
-        "- Retrieve-then-rerank pipelines\n"
-        "- Retrieval and answer evaluation"
+        "- Common sports injuries, symptoms, and urgent warning signs\n"
+        "- Ankle sprains and knee injuries, including ACL injuries\n"
+        "- Muscle strains, tendon pain, and overuse injuries\n"
+        "- Concussion recognition and return-to-sport progression\n"
+        "- Heat illness, hydration, and athlete safety\n"
+        "- Injury prevention, rehabilitation principles, and return to sport"
     )
 
 
@@ -304,6 +304,6 @@ with about_tab:
         "With a key, it generates an answer using only the retrieved context."
     )
     st.warning(
-        "This is an educational RAG demonstration. Retrieved sources can still be incomplete "
-        "or wrong, so inspect the evidence and original links."
+        "This is an educational information tool, not a medical device. It cannot diagnose injuries, prescribe treatment, or clear anyone to play. For urgent warning signs, seek medical care. Retrieved sources can be incomplete "
+        "so inspect the evidence and original links."
     )
