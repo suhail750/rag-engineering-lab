@@ -16,7 +16,7 @@ ROOT_DIR = Path(__file__).resolve().parent
 SAMPLE_DIR = ROOT_DIR / "sample_data"
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
-st.set_page_config(page_title=APP_TITLE, page_icon="🧪", layout="wide")
+st.set_page_config(page_title=APP_TITLE, page_icon="🏃", layout="wide")
 
 st.markdown("""
 <style>
@@ -27,8 +27,8 @@ st.markdown("""
 .hero p {color: #C7CBD6; font-size: 1.05rem;}
 </style>
 <div class="hero">
-  <h1>🧪 RAG Engineering Lab</h1>
-  <p>Explore how real RAG systems work. Ask questions and inspect the web-sourced evidence behind every answer.</p>
+  <h1>🏃 Sports Health & Injury Assistant</h1>
+  <p>Explore sports injuries, recovery, prevention, and athlete health using evidence from trusted public sources.</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -95,7 +95,7 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 with st.sidebar:
-    st.title("Lab settings")
+    st.title("Sports assistant settings")
     retrieval_mode = st.selectbox("Retrieval method", ["Hybrid", "Dense", "BM25"])
     top_k = st.slider("Passages to retrieve", 1, 12, 5)
     use_reranker = st.checkbox("Use cross-encoder reranking")
@@ -109,13 +109,13 @@ with st.sidebar:
         os.getenv("GROQ_API_KEY", ""),
         type="password",
     )
-    groq_model = st.text_input("Groq model", "llama-3.3-70b-versatile")
+    groq_model = st.text_input("Groq model", "openai/gpt-oss-120b")
 
     if st.button("Clear chat"):
         st.session_state.messages = []
         st.rerun()
 
-    st.caption("The chatbot searches only the project's included knowledge base.")
+    st.caption("The assistant searches only the shared sports-health knowledge base. It does not diagnose or replace a clinician.")
 
 active_chunks = [
     item for item in chunks
@@ -123,15 +123,17 @@ active_chunks = [
 ]
 
 ask_tab, knowledge_tab, evaluation_tab, about_tab = st.tabs(
-    ["Ask the Lab", "Knowledge base", "Evaluation", "How it works"]
+    ["Ask Sports Health", "Injury Library", "Evaluation", "How it works"]
 )
 
 with ask_tab:
-    st.subheader("Ask questions about RAG engineering")
+    st.subheader("Ask about sports injuries and athlete health")
     st.write(
-        "Ask about the concepts and techniques covered by our curated web-source notes. "
+        "Ask about common injuries, symptoms, prevention, rehabilitation principles, concussion, heat illness, and return to sport. "
         "Answers are grounded in retrieved passages from this knowledge base."
     )
+
+    st.warning("Educational information only — not a diagnosis or treatment plan. Stop activity and seek urgent help for serious symptoms such as collapse, confusion after a head injury, suspected heat stroke, major deformity, or loss of sensation.")
 
     metric_cols = st.columns(3)
     metric_cols[0].metric("Knowledge passages", len(active_chunks))
@@ -145,7 +147,7 @@ with ask_tab:
                 with st.expander("Inspect retrieved evidence"):
                     show_evidence(message["sources"])
 
-    question = st.chat_input("For example: When should I use hybrid search?")
+    question = st.chat_input("For example: What should I do if I suspect an ankle sprain?")
     if question:
         st.session_state.messages.append({"role": "user", "content": question})
 
@@ -285,10 +287,10 @@ with evaluation_tab:
 
 
 with about_tab:
-    st.subheader("How this RAG app works")
+    st.subheader("How this sports-health RAG assistant works")
     st.markdown("""
-    1. **Web research:** we maintain a small collection of public technical sources.
-    2. **Knowledge notes:** the source material is rewritten as concise learning notes, with original URLs kept as metadata.
+    1. **Web research:** we curate public sports-medicine and public-health sources.
+    2. **Knowledge notes:** the sources are rewritten as concise educational notes, with original URLs kept as metadata.
     3. **Chunking:** LangChain's text splitter breaks notes into searchable passages.
     4. **Embeddings:** Sentence Transformers converts passages and questions into vectors.
     5. **Retrieval:** Dense, BM25, or Hybrid search finds relevant passages.
