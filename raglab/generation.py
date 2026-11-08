@@ -25,7 +25,7 @@ def _extractive_answer(question: str, results: list[dict]) -> str:
     )
 
 
-def answer_question(question: str, results: list[dict], api_key: str = "", model: str = "gemini-2.5-flash") -> dict:
+def answer_question(question: str, results: list[dict], api_key: str = "", model: str = "gemini-3.5-flash-lite") -> dict:
     """Generate a cautious, evidence-grounded sports-health answer with LangChain and Gemini."""
     if not api_key:
         return {"answer": _extractive_answer(question, results), "mode": "retrieval-only (no API key)"}
