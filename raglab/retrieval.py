@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 import re
 from collections import Counter
+from functools import lru_cache
 
 
 def tokenize(text: str) -> list[str]:
@@ -76,12 +77,18 @@ def hybrid_search(query: str, query_vector: list[float], chunks: list[dict], top
     return reciprocal_rank_fusion(dense, lexical)[:max(0, top_k)]
 
 
+@lru_cache(maxsize=2)
+def _load_cross_encoder(model_name: str):
+    """Load each reranker once and reuse it across questions and visitors."""
+    from sentence_transformers import CrossEncoder
+    return CrossEncoder(model_name)
+
+
 def rerank_results(query: str, results: list[dict], top_k: int = 5, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2") -> list[dict]:
     """Optional cross-encoder reranking. Model downloads on first use."""
     if not results:
         return []
-    from sentence_transformers import CrossEncoder
-    model = CrossEncoder(model_name)
+    model = _load_cross_encoder(model_name)
     pairs = [(query, item.get("text", "")) for item in results]
     scores = model.predict(pairs)
     reranked = [{**item, "score": float(score), "retrieval": "cross-encoder"} for item, score in zip(results, scores)]
