@@ -4,7 +4,7 @@
 
 🚀 **[OPEN THE LIVE SPORTS RAG APP](https://suhail750-rag-engineering-lab-app-bfujle.streamlit.app/)**
 
-A public Retrieval-Augmented Generation (RAG) app focused on **sports injuries, athlete safety, injury prevention, rehabilitation principles, and return to sport**. It retrieves evidence from a curated knowledge pack based on public sports-medicine and public-health sources, then uses LangChain and Google Gemini to explain the evidence in plain language.
+A public Retrieval-Augmented Generation (RAG) app focused on **sports injuries, athlete safety, injury prevention, rehabilitation principles, and return to sport**. It retrieves evidence from a curated knowledge pack based on public sports-medicine and public-health sources, then uses LangChain and Google Gemini 3.5 Flash-Lite to explain the evidence in plain language.
 
 **Live app:** https://suhail750-rag-engineering-lab-app-bfujle.streamlit.app/  
 **Repository:** https://github.com/suhail750/rag-engineering-lab
