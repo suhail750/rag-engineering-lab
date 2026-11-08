@@ -155,17 +155,19 @@ with ask_tab:
         with st.chat_message("assistant"):
             try:
                 query_vector = get_embedder().encode([question])[0]
+                # Retrieve a wider candidate pool before the slower cross-encoder stage.
+                retrieval_k = max(top_k * 3, 12) if use_reranker else top_k
 
                 if retrieval_mode == "Dense":
-                    results = dense_search(query_vector, active_chunks, top_k=top_k)
+                    results = dense_search(query_vector, active_chunks, top_k=retrieval_k)
                 elif retrieval_mode == "BM25":
-                    results = bm25_search(question, active_chunks, top_k=top_k)
+                    results = bm25_search(question, active_chunks, top_k=retrieval_k)
                 else:
                     results = hybrid_search(
                         question,
                         query_vector,
                         active_chunks,
-                        top_k=top_k,
+                        top_k=retrieval_k,
                     )
 
                 if use_reranker and results:
@@ -240,17 +242,18 @@ with evaluation_tab:
             for case in cases:
                 question_text = case["question"]
                 vector = get_embedder().encode([question_text])[0]
+                retrieval_k = max(top_k * 3, 12) if use_reranker else top_k
 
                 if retrieval_mode == "Dense":
-                    found = dense_search(vector, active_chunks, top_k=top_k)
+                    found = dense_search(vector, active_chunks, top_k=retrieval_k)
                 elif retrieval_mode == "BM25":
-                    found = bm25_search(question_text, active_chunks, top_k=top_k)
+                    found = bm25_search(question_text, active_chunks, top_k=retrieval_k)
                 else:
                     found = hybrid_search(
                         question_text,
                         vector,
                         active_chunks,
-                        top_k=top_k,
+                        top_k=retrieval_k,
                     )
 
                 # Evaluation labels are source-level, so count each source once.
