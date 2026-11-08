@@ -1,8 +1,26 @@
 # Sports Health & Athlete Safety RAG 🏃‍♂️
 
-<https://suhail750-rag-engineering-lab-app-bfujle.streamlit.app/>
+<p align="center">
+  <a href="https://suhail750-rag-engineering-lab-app-bfujle.streamlit.app/">
+    <img src="https://img.shields.io/badge/🚀_OPEN_LIVE_CHATBOT-Try_the_Sports_RAG_App-16834A?style=for-the-badge" alt="Open the live Sports RAG chatbot">
+  </a>
+  <a href="https://github.com/suhail750/rag-engineering-lab">
+    <img src="https://img.shields.io/badge/GitHub-View_Source_Code-181717?style=for-the-badge&logo=github" alt="View source code on GitHub">
+  </a>
+</p>
 
-🚀 **[OPEN THE LIVE SPORTS RAG APP](https://suhail750-rag-engineering-lab-app-bfujle.streamlit.app/)**
+> **Want to try the project?** Open the live chatbot, type a sports-health question, and explore the retrieved evidence and source links. No need to install anything to try the public demo.
+
+### Try asking the chatbot
+- What are common warning signs of an ACL injury?
+- What should an athlete do after a suspected concussion?
+- How can athletes reduce the risk of ankle sprains?
+- What are the warning signs of heat illness?
+
+**How to use the live demo**
+1. Click **OPEN LIVE CHATBOT** above.
+2. Enter a question in the chat.
+3. Read the answer and inspect the retrieved evidence and source links.
 
 A public Retrieval-Augmented Generation (RAG) app focused on **sports injuries, athlete safety, injury prevention, rehabilitation principles, and return to sport**. It retrieves evidence from a curated knowledge pack based on public sports-medicine and public-health sources, then uses LangChain and Google Gemini 3.5 Flash-Lite to explain the evidence in plain language.
 
