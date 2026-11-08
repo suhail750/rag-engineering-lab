@@ -1,35 +1,38 @@
-# Dense retrieval, sparse retrieval, and BM25
+# Muscle strains, tendon pain, and overuse injuries
 
-Retrieval is the search stage of RAG. It finds passages likely to help answer the question. A language model cannot use evidence that retrieval failed to find.
+Not every sports injury happens in one moment. Repeated training loads, insufficient recovery, sudden increases in volume or intensity, and changes in surface or equipment can contribute to overuse problems. Training load is only one factor; technique, previous injury, health, sleep, nutrition, and individual capacity also matter.
 
-## Dense retrieval
-Dense retrieval uses embeddings. The system converts each document chunk and the user's query into vectors, then compares them with a similarity measure such as cosine similarity or dot product.
+## Muscle strains
 
-Example: a question about "finding semantically related passages" may retrieve a chunk about vector similarity even when the wording differs.
+A muscle strain involves damage to muscle fibres or the muscle-tendon unit. Hamstring, calf, quadriceps, and groin strains are seen in sports that involve sprinting, acceleration, kicking, and rapid changes of direction.
 
-Strengths: matches paraphrases and related meanings. Weaknesses: can miss exact identifiers, rare names, error codes, and technical strings. Similarity is not the same as factual relevance.
+Possible symptoms include sudden sharp pain, tenderness, weakness, bruising, or difficulty using the muscle. A pop or severe loss of function should be assessed. The severity cannot be reliably graded by a chatbot.
 
-## Sparse / lexical retrieval
-Sparse retrieval represents text using weighted terms. Traditional keyword search is a familiar example. It is strong when query words also appear in the document.
+Do not sprint or stretch aggressively through sharp pain. A sports clinician or physiotherapist can assess the injury and guide a progressive rehabilitation plan.
 
-## BM25
-BM25 is a common lexical ranking algorithm. It scores documents using query-term frequency, how rare each term is across the collection, and document-length normalisation.
+## Tendon problems
 
-- A matching query term increases a document's score.
-- Rare terms usually provide stronger evidence than common terms.
-- Repeating a term helps, but with diminishing returns.
-- Length normalisation prevents long documents from automatically winning.
+Tendons transmit force from muscle to bone. Tendon pain may be associated with repeated loading and can affect the Achilles tendon, patellar tendon, or other areas. Pain patterns alone do not confirm tendinopathy; other conditions can look similar.
 
-BM25 is useful for exact technical terms, names, acronyms, identifiers, and error messages.
+Management often involves an individualised plan that adjusts provoking loads and progressively rebuilds capacity. Continuing hard training through worsening pain is not a safe strategy. Get professional guidance, especially if there was a sudden pop, major weakness, or loss of function.
 
-## Dense versus BM25
-- Paraphrased natural-language question: dense retrieval often helps.
-- Exact API name or error code: BM25 often helps.
-- Natural-language question containing domain-specific terms: try hybrid retrieval.
+## Bone stress injuries
 
-Neither method is always best. Evaluate using realistic questions.
+Bone stress injuries can develop when repeated loading outpaces the body's ability to repair and adapt. Focal bone pain that worsens with impact activity deserves assessment. Continuing to run or jump through suspected bone stress pain can worsen the injury.
 
-## Top-k
-Top-k is the number of passages returned. Small k may miss useful evidence (low recall). Large k may add noise, latency, and cost. Tune it with evaluation rather than guessing.
+## Training-load habits that may reduce risk
 
-Source: https://www.pinecone.io/learn/series/rag/
+- Increase training volume and intensity gradually rather than making abrupt jumps.
+- Include recovery days and vary high- and low-load sessions.
+- Maintain strength and conditioning appropriate to the sport.
+- Address persistent pain early instead of waiting until performance collapses.
+- Track workload, sleep, fatigue, mood, and recurring symptoms to spot patterns.
+- Return from time off progressively; do not immediately resume the previous peak workload.
+
+## Sources
+
+- AAOS OrthoInfo, Soccer Injury Prevention: https://www.orthoinfo.org/staying-healthy/soccer-injury-prevention
+- AOSSM, Prevention & Care of Soccer Injuries: https://www.sportsmed.org/prevention-care-of-soccer-injuries
+- NICE, Rehabilitation after traumatic injury: https://www.nice.org.uk/guidance/ng211/chapter/Recommendations
+
+Educational summary only. Persistent, focal, worsening, or function-limiting pain should be assessed by a healthcare professional.
