@@ -115,7 +115,7 @@ with st.sidebar:
         st.session_state.messages = []
         st.rerun()
 
-    st.caption("Answers are based on the shared Sports Health & Athlete Safety knowledge base. Add a Groq API key in Streamlit Secrets for generated explanations.")
+    st.caption("This assistant answers from the shared sports-health knowledge base. Add GROQ_API_KEY in Streamlit Secrets for generated explanations.")
 
 active_chunks = [
     item for item in chunks
@@ -123,7 +123,7 @@ active_chunks = [
 ]
 
 ask_tab, knowledge_tab, evaluation_tab, about_tab = st.tabs(
-    ["Ask Sports RAG", "RAG Library", "Evaluation", "How it works"]
+    ["Ask Sports RAG", "Sports Health Library", "Evaluation", "How it works"]
 )
 
 with ask_tab:
@@ -204,7 +204,7 @@ with ask_tab:
 with knowledge_tab:
     st.subheader("Sports health knowledge library")
     st.write(
-        "These are beginner-friendly educational summaries based on public sports-medicine guidance, "
+        "These are educational summaries based on public sports-medicine guidance, "
         "clinical education, and consensus statements. Open the original links to read the sources."
     )
 
@@ -290,7 +290,7 @@ with about_tab:
     st.subheader("How this Sports Health RAG works")
     st.markdown("""
     1. **Web research:** we curate public sports-medicine, sports-health, and rehabilitation guidance.
-    2. **Knowledge notes:** the sources are rewritten as concise educational notes, with original URLs kept as metadata.
+    2. **Knowledge notes:** the sources are summarised into concise sports-health notes, with original URLs kept as metadata.
     3. **Chunking:** LangChain's text splitter breaks notes into searchable passages.
     4. **Embeddings:** Sentence Transformers converts passages and questions into vectors.
     5. **Retrieval:** Dense, BM25, or Hybrid search finds relevant passages.
