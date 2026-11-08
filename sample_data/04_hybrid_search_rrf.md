@@ -1,32 +1,31 @@
-# Hybrid search, RRF, and query strategies
+# Concussion in sport: recognition and safe return
 
-## Hybrid search
-Hybrid search combines dense semantic retrieval with sparse lexical retrieval. Dense search matches meaning and paraphrases; BM25-style search matches exact terms and identifiers. The system merges and deduplicates candidates from both.
+A concussion is a traumatic brain injury caused by a blow to the head or a force transmitted to the head. It can happen without a direct hit to the head. Symptoms may be subtle and can appear after the event, so an athlete should be monitored after a suspected concussion.
 
-## Reciprocal Rank Fusion (RRF)
-Dense and BM25 scores use different scales, so adding their raw scores can be misleading. RRF combines ranked lists using each result's position:
+## Possible signs and symptoms
 
-RRF(document) = sum of 1 / (k + rank) across ranking lists.
+Symptoms can include headache, dizziness, nausea, balance problems, sensitivity to light or noise, blurred vision, confusion, memory difficulty, feeling slowed down, or changes in mood and sleep. A person may not lose consciousness.
 
-Here rank is the document's position in one list and k is a smoothing constant (often 60). A document ranked highly by multiple retrievers receives a stronger combined score. RRF uses ranks, so it does not require raw scores to be calibrated.
+These symptoms are not a diagnosis. A healthcare professional should assess a suspected concussion.
 
-## Typical hybrid pipeline
-1. Run dense retrieval and BM25 separately.
-2. Retrieve a broad candidate set from each.
-3. Merge and deduplicate candidates.
-4. Fuse rankings with RRF.
-5. Optionally rerank the fused candidates.
-6. Keep the final top-k passages for generation.
+## Immediate safety steps
 
-## Query strategies
-- **Query rewriting:** turn an unclear or conversational question into a clearer standalone search query using context.
-- **Multi-query:** generate alternative phrasings, search each, then merge results. This may improve recall but adds latency and noise.
-- **Query decomposition:** break a complex question into smaller subquestions, search each, and combine evidence.
-- **Metadata filtering:** restrict results by date, category, source, or permissions.
-- **HyDE:** generate a hypothetical answer-like passage and use its embedding as a search query. It can bridge wording gaps, but the hypothetical text may contain errors.
-- **Parent-child retrieval:** search small chunks but return a larger parent section.
-- **Contextual retrieval:** add a short description of a chunk's position in its source before indexing, helping ambiguous chunks make sense.
+- Remove the athlete from play when concussion is suspected.
+- Do not allow same-day return to sport.
+- Arrange prompt medical assessment and follow the sport's concussion protocol.
+- Call emergency services for worsening headache, repeated vomiting, seizure, weakness or numbness, slurred speech, increasing confusion, unusual behaviour, loss of consciousness, or difficulty waking.
+- Do not leave a seriously symptomatic athlete alone.
 
-Sources:
-- https://www.pinecone.io/learn/retrieval-augmented-generation/
-- https://learn.microsoft.com/en-us/azure/architecture/ai-ml/guide/rag/rag-information-retrieval
+## Return-to-sport progression
+
+The CDC describes a six-step return-to-sports progression after a healthcare provider has approved it. Each step typically takes at least 24 hours, and the athlete should move forward only when no new symptoms occur at the current step. The steps move from regular daily activities, to light aerobic activity, moderate activity, heavy non-contact activity, practice/full contact when appropriate, and finally competition.
+
+If symptoms return, stop the progression and contact the healthcare provider. The athlete may need more recovery time and should resume only under the clinician's guidance. This is not a self-clearance checklist.
+
+## Sources
+
+- CDC HEADS UP, Returning to Sports: https://www.cdc.gov/heads-up/guidelines/returning-to-sports.html
+- FIFA, Concussion return-to-play guidelines: https://inside.fifa.com/campaigns/concussion/return-to-play-guidelines
+- CDC, Managing Return to Activities: https://www.cdc.gov/heads-up/hcp/clinical-guidance/index.html
+
+Concussion can be serious. This note is educational and does not replace urgent assessment or medical clearance.
