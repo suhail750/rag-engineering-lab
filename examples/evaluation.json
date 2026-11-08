@@ -1,0 +1,10 @@
+[
+  {
+    "question": "What is retrieval-augmented generation?",
+    "relevant_sources": ["intro-to-rag.md"]
+  },
+  {
+    "question": "Why do RAG systems split documents into chunks?",
+    "relevant_sources": ["intro-to-rag.md"]
+  }
+]
