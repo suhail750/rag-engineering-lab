@@ -3,6 +3,20 @@ from __future__ import annotations
 import math
 
 
+def unique_sources_in_rank_order(results: list[dict], k: int) -> list[str]:
+    """Return the first k distinct source names in retrieval order."""
+    sources = []
+    seen = set()
+    for item in results:
+        source = item.get("source")
+        if source is not None and source not in seen:
+            seen.add(source)
+            sources.append(source)
+            if len(sources) == k:
+                break
+    return sources
+
+
 def evaluate_retrieval(rows: list[dict], k: int = 5) -> dict[str, float]:
     """Calculate source-level Hit Rate@k, Recall@k, Precision@k, MRR@k, and nDCG@k."""
     if k <= 0:
