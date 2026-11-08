@@ -1,5 +1,9 @@
 # Sports Health & Athlete Safety RAG 🏃‍♂️
 
+<https://suhail750-rag-engineering-lab-app-bfujle.streamlit.app/>
+
+🚀 **[OPEN THE LIVE SPORTS RAG APP](https://suhail750-rag-engineering-lab-app-bfujle.streamlit.app/)**
+
 A public Retrieval-Augmented Generation (RAG) app focused on **sports injuries, athlete safety, injury prevention, rehabilitation principles, and return to sport**. It retrieves evidence from a curated knowledge pack based on public sports-medicine and public-health sources, then uses LangChain and Groq to explain the evidence in plain language.
 
 **Live app:** https://suhail750-rag-engineering-lab-app-bfujle.streamlit.app/  
