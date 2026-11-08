@@ -116,7 +116,7 @@ with st.sidebar:
         os.getenv("GEMINI_API_KEY", "") or os.getenv("GOOGLE_API_KEY", "") or get_streamlit_secret(),
         type="password",
     )
-    gemini_model = st.text_input("Gemini model", "gemini-2.5-flash")
+    gemini_model = st.text_input("Gemini model", "gemini-3.5-flash-lite")
 
     if st.button("Clear chat"):
         st.session_state.messages = []
