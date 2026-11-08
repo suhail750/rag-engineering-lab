@@ -1,0 +1,9 @@
+[
+  {"question": "What are the main stages of a RAG system?", "relevant_sources": ["01_rag_fundamentals.md"]},
+  {"question": "Why do RAG systems split documents into overlapping chunks?", "relevant_sources": ["02_chunking_and_metadata.md"]},
+  {"question": "How does BM25 differ from dense retrieval?", "relevant_sources": ["03_dense_and_bm25_retrieval.md"]},
+  {"question": "How does Reciprocal Rank Fusion combine ranked lists?", "relevant_sources": ["04_hybrid_search_rrf.md"]},
+  {"question": "Why is a cross-encoder used after initial retrieval?", "relevant_sources": ["05_reranking.md"]},
+  {"question": "What metrics can measure retrieval quality?", "relevant_sources": ["06_rag_evaluation.md"]},
+  {"question": "How should RAG answer faithfulness and citations be evaluated?", "relevant_sources": ["06_rag_evaluation.md", "01_rag_fundamentals.md"]}
+]
