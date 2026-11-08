@@ -6,7 +6,7 @@ import streamlit as st
 
 from raglab.config import APP_TITLE, DEFAULT_CHUNK_OVERLAP, DEFAULT_CHUNK_SIZE
 from raglab.embeddings import EmbeddingService
-from raglab.evaluation import evaluate_retrieval
+from raglab.evaluation import evaluate_retrieval, unique_sources_in_rank_order
 from raglab.generation import answer_question
 from raglab.ingestion import prepare_chunks
 from raglab.retrieval import bm25_search, dense_search, hybrid_search, rerank_results
@@ -253,11 +253,14 @@ with evaluation_tab:
                         top_k=top_k,
                     )
 
+                # Evaluation labels are source-level, so count each source once.
+                # Otherwise several chunks from one file can occupy the top-k slots.
+                if use_reranker and found:
+                    found = rerank_results(question_text, found, top_k=top_k)
+
                 evaluation_rows.append({
                     "relevant_sources": case["relevant_sources"],
-                    "retrieved_sources": [
-                        item.get("source") for item in found
-                    ],
+                    "retrieved_sources": unique_sources_in_rank_order(found, top_k),
                 })
 
             metrics = evaluate_retrieval(evaluation_rows, k=top_k)
