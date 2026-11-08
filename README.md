@@ -72,7 +72,7 @@ Public sports-medicine and public-health sources
 ## LangChain usage
 
 1. `raglab/ingestion.py` uses LangChain `Document` and `RecursiveCharacterTextSplitter`.
-2. `raglab/generation.py` uses `ChatPromptTemplate | ChatGemini | StrOutputParser`.
+2. `raglab/generation.py` uses `ChatPromptTemplate | ChatGoogleGenerativeAI | StrOutputParser`.
 
 The embedding and retrieval functions remain small Python functions so beginners can inspect the pipeline.
 
