@@ -1,0 +1,13 @@
+{
+  "pack_name": "RAG Engineering Lab — Web-sourced starter knowledge pack",
+  "pack_version": "1.0.0",
+  "curation_note": "These are original paraphrased educational notes based on the public sources listed below. They are not copied full-text web pages. Consult the source URLs for the original material.",
+  "documents": [
+    {"file": "01_rag_fundamentals.md", "title": "RAG fundamentals", "source_url": "https://arxiv.org/abs/2005.11401", "publisher": "arXiv / original research paper", "source_type": "research paper"},
+    {"file": "02_chunking_and_metadata.md", "title": "Chunking and metadata", "source_url": "https://learn.microsoft.com/en-us/azure/architecture/ai-ml/guide/rag/rag-information-retrieval", "publisher": "Microsoft Learn", "source_type": "technical documentation"},
+    {"file": "03_dense_and_bm25_retrieval.md", "title": "Dense and BM25 retrieval", "source_url": "https://www.sbert.net/examples/sentence_transformer/applications/retrieve_rerank/README.html", "publisher": "Sentence Transformers", "source_type": "technical documentation"},
+    {"file": "04_hybrid_search_rrf.md", "title": "Hybrid search and RRF", "source_url": "https://cloud.google.com/generative-ai-app-builder/docs/hybrid-search", "publisher": "Google Cloud", "source_type": "technical documentation"},
+    {"file": "05_reranking.md", "title": "Retrieve and rerank", "source_url": "https://www.sbert.net/examples/sentence_transformer/applications/retrieve_rerank/README.html", "publisher": "Sentence Transformers", "source_type": "technical documentation"},
+    {"file": "06_rag_evaluation.md", "title": "RAG evaluation", "source_url": "https://sbert.net/docs/package_reference/sentence_transformer/evaluation.html", "publisher": "Sentence Transformers", "source_type": "technical documentation"}
+  ]
+}
