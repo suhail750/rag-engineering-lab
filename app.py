@@ -33,7 +33,14 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-def get_streamlit_secret():\n    try:\n        return st.secrets.get("GROQ_API_KEY", "")\n    except Exception:\n        return ""\n\n\ndef load_web_knowledge():
+def get_streamlit_secret():
+    try:
+        return st.secrets.get("GROQ_API_KEY", "")
+    except Exception:
+        return ""
+
+
+def load_web_knowledge():
     """Read our curated notes and their original public web sources."""
     manifest = json.loads((SAMPLE_DIR / "sources.json").read_text(encoding="utf-8"))
     documents = []
