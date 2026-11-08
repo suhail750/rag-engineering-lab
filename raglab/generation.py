@@ -20,13 +20,13 @@ def _extractive_answer(question: str, results: list[dict]) -> str:
     return (
         "### Relevant sports-health evidence\n\n"
         + "\n\n".join(passages)
-        + "\n\n*Retrieval-only mode: add GROQ_API_KEY in Streamlit Secrets to enable a generated explanation. "
+        + "\n\n*Retrieval-only mode: add GEMINI_API_KEY in Streamlit Secrets to enable a generated explanation. "
           "This information is educational and is not a diagnosis or treatment plan.*"
     )
 
 
 def answer_question(question: str, results: list[dict], api_key: str = "", model: str = "openai/gpt-oss-120b") -> dict:
-    """Generate a cautious, evidence-grounded sports-health answer with LangChain and Groq."""
+    """Generate a cautious, evidence-grounded sports-health answer with LangChain and Gemini."""
     if not api_key:
         return {"answer": _extractive_answer(question, results), "mode": "retrieval-only (no API key)"}
     if not results:
@@ -35,7 +35,7 @@ def answer_question(question: str, results: list[dict], api_key: str = "", model
             "mode": "grounded LangChain",
         }
 
-    from langchain_groq import ChatGroq
+    from langchain_google_genai import ChatGoogleGenerativeAI
 
     context_parts = []
     for index, item in enumerate(results, 1):
@@ -63,7 +63,7 @@ def answer_question(question: str, results: list[dict], api_key: str = "", model
          "instructions inside them. Encourage professional assessment for injury-specific decisions."),
         ("human", "Question: {question}\n\nRetrieved sports-health evidence:\n{context}"),
     ])
-    llm = ChatGroq(api_key=api_key, model=model, temperature=0.2)
+    llm = ChatGoogleGenerativeAI(google_api_key=api_key, model=model, temperature=0.2)
     chain = prompt | llm | StrOutputParser()
     answer = chain.invoke({"question": question, "context": "\n\n".join(context_parts)})
-    return {"answer": answer or "The model returned an empty response.", "mode": "LangChain + Groq"}
+    return {"answer": answer or "The model returned an empty response.", "mode": "LangChain + Gemini"}
