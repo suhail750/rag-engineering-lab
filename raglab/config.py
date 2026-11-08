@@ -1,6 +1,6 @@
 from pathlib import Path
 
-APP_TITLE = "RAG Engineering Lab"
+APP_TITLE = "Sports Health & Athlete Safety RAG"
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / "data"
 INDEX_PATH = DATA_DIR / "index.json"
