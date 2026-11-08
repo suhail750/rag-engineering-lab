@@ -1,31 +1,38 @@
-# Dense retrieval and BM25 lexical retrieval
+# Muscle strains, tendon pain, and overuse injuries
 
-A retrieval system selects candidate passages from a corpus for a user query. Dense and lexical retrieval use different signals and can complement each other.
+Not every sports injury happens in one moment. Repeated training loads, insufficient recovery, sudden increases in volume or intensity, and changes in surface or equipment can contribute to overuse problems. Training load is only one factor; technique, previous injury, health, sleep, nutrition, and individual capacity also matter.
 
-## Dense retrieval
+## Muscle strains
 
-A bi-encoder maps a query and each document passage into vector representations. The system compares the query vector with stored passage vectors, often using cosine similarity or dot product.
+A muscle strain involves damage to muscle fibres or the muscle-tendon unit. Hamstring, calf, quadriceps, and groin strains are seen in sports that involve sprinting, acceleration, kicking, and rapid changes of direction.
 
-Dense retrieval can find passages that express a similar idea using different words. Its quality depends on the embedding model, domain fit, chunking, and similarity configuration. Dense retrieval may struggle with exact identifiers, rare names, product codes, and unusual technical tokens.
+Possible symptoms include sudden sharp pain, tenderness, weakness, bruising, or difficulty using the muscle. A pop or severe loss of function should be assessed. The severity cannot be reliably graded by a chatbot.
 
-## BM25 lexical retrieval
+Do not sprint or stretch aggressively through sharp pain. A sports clinician or physiotherapist can assess the injury and guide a progressive rehabilitation plan.
 
-BM25 is a ranking function built on term matching and document statistics. It considers how often query terms occur in a document, how rare those terms are across the corpus, and document length.
+## Tendon problems
 
-BM25 is often useful for exact terminology, error messages, identifiers, names, and queries where literal wording matters. It may miss relevant passages when the query uses different wording from the document.
+Tendons transmit force from muscle to bone. Tendon pain may be associated with repeated loading and can affect the Achilles tendon, patellar tendon, or other areas. Pain patterns alone do not confirm tendinopathy; other conditions can look similar.
 
-## Choosing between them
+Management often involves an individualised plan that adjusts provoking loads and progressively rebuilds capacity. Continuing hard training through worsening pain is not a safe strategy. Get professional guidance, especially if there was a sudden pop, major weakness, or loss of function.
 
-There is no universally best retrieval method. Test both methods on the actual corpus and question distribution. Record retrieval quality and operational cost rather than relying on assumptions.
+## Bone stress injuries
 
-## Practical diagnostic examples
+Bone stress injuries can develop when repeated loading outpaces the body's ability to repair and adapt. Focal bone pain that worsens with impact activity deserves assessment. Continuing to run or jump through suspected bone stress pain can worsen the injury.
 
-- Query: "What does RRF stand for?" Exact term matching can be useful.
-- Query: "How can search combine meaning-based and keyword-based results?" Dense retrieval may connect the paraphrase to the same concept.
-- Query: "Explain error E_CONN_RESET in service ABC-42." Lexical retrieval may be especially valuable for the exact identifier.
+## Training-load habits that may reduce risk
 
-## Source
+- Increase training volume and intensity gradually rather than making abrupt jumps.
+- Include recovery days and vary high- and low-load sessions.
+- Maintain strength and conditioning appropriate to the sport.
+- Address persistent pain early instead of waiting until performance collapses.
+- Track workload, sleep, fatigue, mood, and recurring symptoms to spot patterns.
+- Return from time off progressively; do not immediately resume the previous peak workload.
 
-Paraphrased learning note informed by:
-- Sentence Transformers, *Retrieve & Re-Rank*: https://www.sbert.net/examples/sentence_transformer/applications/retrieve_rerank/README.html
-- Microsoft Azure Architecture Center, *Information retrieval phase*: https://learn.microsoft.com/en-us/azure/architecture/ai-ml/guide/rag/rag-information-retrieval
+## Sources
+
+- AAOS OrthoInfo, Soccer Injury Prevention: https://www.orthoinfo.org/staying-healthy/soccer-injury-prevention
+- AOSSM, Prevention & Care of Soccer Injuries: https://www.sportsmed.org/prevention-care-of-soccer-injuries
+- NICE, Rehabilitation after traumatic injury: https://www.nice.org.uk/guidance/ng211/chapter/Recommendations
+
+Educational summary only. Persistent, focal, worsening, or function-limiting pain should be assessed by a healthcare professional.
