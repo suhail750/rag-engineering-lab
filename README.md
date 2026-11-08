@@ -123,6 +123,8 @@ The tests cover chunking, BM25 ranking, reciprocal-rank fusion, and retrieval me
 - [x] Optional cross-encoder reranking
 - [x] Grounded chat with citations and fallback
 - [x] Retrieval evaluation metrics
+- [x] Sample knowledge source and evaluation dataset
+- [x] GitHub Actions unit-test workflow
 - [x] Evidence and pipeline inspection
 - [ ] Automated CI and coverage reporting
 - [ ] Authentication and tenant-isolated storage
