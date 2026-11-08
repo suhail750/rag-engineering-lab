@@ -1,38 +1,35 @@
-# Ingestion, chunking, metadata, and embeddings
+# Ankle and knee injuries in sport
 
-## Ingestion
-Ingestion brings data into a RAG system. Sources may include PDF, HTML, Word, Markdown, CSV, or databases. Extract useful text, remove noise, preserve structure, and record where each passage came from.
+Ankle and knee injuries are common in running, jumping, landing, and change-of-direction sports. The same symptom can arise from different structures, so diagnosis may require a clinical examination and sometimes imaging.
 
-Useful metadata includes document title, URL, author, date, page, section, and access permissions. Metadata supports filtering, citations, freshness, and access control.
+## Ankle sprains
 
-## Chunking
-Chunking divides long documents into smaller passages called chunks. A whole book is too large and broad to retrieve as one unit; focused chunks are easier to match to a question.
+An ankle sprain usually involves ligaments being stretched or torn when the ankle rolls or twists. Symptoms can include pain, swelling, bruising, and difficulty walking. A severe sprain can resemble a fracture, and a fracture can occur with a similar mechanism.
 
-- **Fixed-size:** split at a chosen token or character limit. Simple, but can cut ideas awkwardly.
-- **Recursive:** split at natural boundaries such as headings, paragraphs, and sentences. A useful general default.
-- **Semantic:** use meaning or topic changes to choose boundaries. More complex, but can preserve coherent ideas.
-- **Structure-aware:** split by HTML headings, Markdown sections, PDF pages, or code functions.
-- **Parent-child:** retrieve a small child chunk, then provide its larger parent section for context.
+Get medical assessment when the athlete cannot bear weight, has marked tenderness over bone, substantial swelling, deformity, numbness, or symptoms that are severe or not improving. Do not assume every rolled ankle is a simple sprain.
 
-## Chunk size and overlap
-Small chunks can be precise but lose context. Large chunks preserve context but may include unrelated material and consume more tokens. Overlap repeats some text between adjacent chunks to preserve ideas crossing boundaries. Too much overlap creates duplicates and noise. There is no universal best size: evaluate with real questions.
+After assessment, rehabilitation commonly progresses from protecting the injury and restoring comfortable movement toward strength, balance, walking, jogging, running, and sport-specific direction changes. The sequence and timing should be individualised by a clinician or physiotherapist. Returning too early can increase the chance of another injury.
 
-## Embeddings
-An embedding model converts text into a vector (a list of numbers). Related meanings often have nearby vectors. The question is embedded using a compatible model and compared with document vectors.
+## ACL and other knee injuries
 
-Embeddings help semantic search: "find passages about understanding similar meanings" may retrieve a passage about semantic retrieval even if the exact words differ.
+The anterior cruciate ligament (ACL) helps control knee stability, especially during pivoting, landing, and rapid direction changes. ACL injuries can happen with or without contact. A twisting movement, sudden stop, awkward landing, a pop sensation, rapid swelling, or the knee giving way can occur, but these signs do not prove an ACL tear.
 
-Limitations: similarity does not guarantee that a passage answers the question; domain terms and language affect quality; query and document vectors must use compatible models and dimensions; changing the model usually requires re-embedding the corpus.
+Other possible knee problems include meniscus injuries, collateral ligament injuries, patellar dislocation, tendon problems, and fractures. A clinician must distinguish between them.
 
-## Metadata filtering
-Filters restrict retrieval by date, category, language, document type, or permissions. Enforce access-control filters in application logic, not merely in a prompt.
+A suspected major ligament injury, locked knee, inability to bear weight, significant swelling after trauma, or visible deformity needs prompt medical evaluation.
 
-## Practical checklist
-1. Preserve original source URLs and stable document IDs.
-2. Remove repeated headers, footers, and extraction noise.
-3. Keep headings with the text they explain.
-4. Store source metadata on every chunk.
-5. Inspect real chunks before selecting chunk size.
-6. Evaluate with representative user questions.
+## General principles
 
-Source: https://www.mongodb.com/docs/vector-search/tutorials/rag/
+- Stop play when an injury changes normal movement or joint stability.
+- Do not test a painful knee with repeated jumping, cutting, or pivoting.
+- Avoid using painkillers to hide symptoms so that an athlete can continue playing.
+- Follow a supervised rehabilitation plan and functional criteria rather than a guessed calendar date.
+- Seek reassessment if pain, swelling, instability, or loss of movement returns.
+
+## Sources
+
+- AOSSM, Prevention & Care of Soccer Injuries: https://www.sportsmed.org/prevention-care-of-soccer-injuries
+- AAOS OrthoInfo, Soccer Injury Prevention: https://www.orthoinfo.org/staying-healthy/soccer-injury-prevention
+- AAOS OrthoInfo: https://orthoinfo.aaos.org/
+
+Educational information only. It cannot determine which ligament, tendon, or bone is injured.
