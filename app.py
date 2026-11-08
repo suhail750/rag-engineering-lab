@@ -16,7 +16,7 @@ ROOT_DIR = Path(__file__).resolve().parent
 SAMPLE_DIR = ROOT_DIR / "sample_data"
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
-st.set_page_config(page_title=APP_TITLE, page_icon="🧠", layout="wide")
+st.set_page_config(page_title=APP_TITLE, page_icon="🏃", layout="wide")
 
 st.markdown("""
 <style>
@@ -27,13 +27,13 @@ st.markdown("""
 .hero p {color: #C7CBD6; font-size: 1.05rem;}
 </style>
 <div class="hero">
-  <h1>🧠 RAG Engineering Lab</h1>
-  <p>Learn RAG from fundamentals to production using curated public technical references.</p>
+  <h1>🏃 Sports Health & Athlete Safety RAG</h1>
+  <p>Evidence-based sports injury, prevention, recovery, and athlete-safety information from public sports-medicine sources.</p>
 </div>
 """, unsafe_allow_html=True)
 
 
-def load_web_knowledge():
+def get_streamlit_secret():\n    try:\n        return st.secrets.get("GROQ_API_KEY", "")\n    except Exception:\n        return ""\n\n\ndef load_web_knowledge():
     """Read our curated notes and their original public web sources."""
     manifest = json.loads((SAMPLE_DIR / "sources.json").read_text(encoding="utf-8"))
     documents = []
@@ -95,7 +95,7 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 with st.sidebar:
-    st.title("RAG Lab settings")
+    st.title("Sports RAG settings")
     retrieval_mode = st.selectbox("Retrieval method", ["Hybrid", "Dense", "BM25"])
     top_k = st.slider("Passages to retrieve", 1, 12, 5)
     use_reranker = st.checkbox("Use cross-encoder reranking")
@@ -106,7 +106,7 @@ with st.sidebar:
     )
     groq_key = st.text_input(
         "Groq API key (optional)",
-        os.getenv("GROQ_API_KEY", st.secrets.get("GROQ_API_KEY", "")),
+        os.getenv("GROQ_API_KEY", "") or get_streamlit_secret(),
         type="password",
     )
     groq_model = st.text_input("Groq model", "openai/gpt-oss-120b")
@@ -115,7 +115,7 @@ with st.sidebar:
         st.session_state.messages = []
         st.rerun()
 
-    st.caption("Answers are based on the shared RAG Engineering Lab knowledge base. Add a Groq API key in Streamlit Secrets for generated explanations.")
+    st.caption("Answers are based on the shared Sports Health & Athlete Safety knowledge base. Add a Groq API key in Streamlit Secrets for generated explanations.")
 
 active_chunks = [
     item for item in chunks
@@ -123,13 +123,13 @@ active_chunks = [
 ]
 
 ask_tab, knowledge_tab, evaluation_tab, about_tab = st.tabs(
-    ["Ask RAG Lab", "RAG Library", "Evaluation", "How it works"]
+    ["Ask Sports RAG", "RAG Library", "Evaluation", "How it works"]
 )
 
 with ask_tab:
-    st.subheader("Ask anything about RAG engineering")
+    st.subheader("Ask about sports health and athlete safety")
     st.write(
-        "Ask about how RAG works, embeddings, chunking, vector databases, retrieval, hybrid search, reranking, evaluation, and production systems. "
+        "Ask about common sports injuries, ankle and knee injuries, muscle strains, concussion, heat illness, injury prevention, rehabilitation principles, and return to sport. "
         "Answers are grounded in retrieved passages from this knowledge base."
     )
 
@@ -147,7 +147,7 @@ with ask_tab:
                 with st.expander("Inspect retrieved evidence"):
                     show_evidence(message["sources"])
 
-    question = st.chat_input("For example: Explain hybrid search and RRF with a simple Python example.")
+    question = st.chat_input("For example: What should happen if a player is suspected of having a concussion?")
     if question:
         st.session_state.messages.append({"role": "user", "content": question})
 
@@ -202,7 +202,7 @@ with ask_tab:
 
 
 with knowledge_tab:
-    st.subheader("RAG engineering knowledge library")
+    st.subheader("Sports health knowledge library")
     st.write(
         "These are beginner-friendly educational summaries based on public sports-medicine guidance, "
         "clinical education, and consensus statements. Open the original links to read the sources."
@@ -287,9 +287,9 @@ with evaluation_tab:
 
 
 with about_tab:
-    st.subheader("How this RAG Engineering Lab works")
+    st.subheader("How this Sports Health RAG works")
     st.markdown("""
-    1. **Web research:** we curate public technical documentation and research sources.
+    1. **Web research:** we curate public sports-medicine, sports-health, and rehabilitation guidance.
     2. **Knowledge notes:** the sources are rewritten as concise educational notes, with original URLs kept as metadata.
     3. **Chunking:** LangChain's text splitter breaks notes into searchable passages.
     4. **Embeddings:** Sentence Transformers converts passages and questions into vectors.
@@ -304,5 +304,5 @@ with about_tab:
         "With a key, it generates an answer using only the retrieved context."
     )
     st.warning(
-        "This is a learning tool. Answers can be incomplete, so inspect the retrieved evidence and original source links."
+        "This is an educational information tool, not a medical device. It cannot diagnose injuries, prescribe treatment, or clear anyone to play. Seek professional care for injury-specific decisions and urgent care for serious warning signs."
     )
