@@ -4,13 +4,13 @@ from langchain_core.prompts import ChatPromptTemplate
 
 def _extractive_answer(results: list[dict]) -> str:
     if not results:
-        return "I couldn't find relevant information in your documents. Try rephrasing your question."
+        return "I couldn't find relevant information in the RAG knowledge base. Try rephrasing your question."
     passages = []
     for item in results[:3]:
         text = " ".join(item.get("text", "").split())
         if text:
             passages.append(f"- {text[:650]}")
-    return "No LLM key is configured, so here are the most relevant passages:\n\n" + "\n\n".join(passages)
+    return "No LLM key is configured, so here are the most relevant passages from the RAG knowledge base:\n\n" + "\n\n".join(passages)
 
 def answer_question(question: str, results: list[dict], api_key: str = "",
                     model: str = "llama-3.3-70b-versatile") -> dict:
@@ -18,7 +18,7 @@ def answer_question(question: str, results: list[dict], api_key: str = "",
     if not api_key:
         return {"answer": _extractive_answer(results), "mode": "extractive fallback"}
     if not results:
-        return {"answer": "I couldn't find supporting passages in your documents.", "mode": "grounded LangChain"}
+        return {"answer": "I couldn't find supporting passages in the RAG knowledge base.", "mode": "grounded LangChain"}
     from langchain_groq import ChatGroq
     context_parts = []
     for index, item in enumerate(results, 1):
