@@ -4,7 +4,7 @@
 
 🚀 **[OPEN THE LIVE SPORTS RAG APP](https://suhail750-rag-engineering-lab-app-bfujle.streamlit.app/)**
 
-A public Retrieval-Augmented Generation (RAG) app focused on **sports injuries, athlete safety, injury prevention, rehabilitation principles, and return to sport**. It retrieves evidence from a curated knowledge pack based on public sports-medicine and public-health sources, then uses LangChain and Groq to explain the evidence in plain language.
+A public Retrieval-Augmented Generation (RAG) app focused on **sports injuries, athlete safety, injury prevention, rehabilitation principles, and return to sport**. It retrieves evidence from a curated knowledge pack based on public sports-medicine and public-health sources, then uses LangChain and Google Gemini to explain the evidence in plain language.
 
 **Live app:** https://suhail750-rag-engineering-lab-app-bfujle.streamlit.app/  
 **Repository:** https://github.com/suhail750/rag-engineering-lab
@@ -34,9 +34,9 @@ The current knowledge pack is a starter educational library, not a complete clin
 - Evidence-grounded answers with inspectable retrieved passages and original source links.
 - Dense, BM25, and Hybrid retrieval.
 - Optional cross-encoder reranking.
-- LangChain document splitting and LangChain + Groq generation.
+- LangChain document splitting and LangChain + Gemini generation.
 - Built-in retrieval evaluation: Hit Rate@k, Recall@k, Precision@k, MRR@k, and nDCG@k.
-- Extractive fallback when no Groq API key is configured.
+- Extractive fallback when no Gemini API key is configured.
 
 ## Knowledge sources
 
@@ -64,7 +64,7 @@ Public sports-medicine and public-health sources
                     ↓
       Optional cross-encoder reranking
                     ↓
-          LangChain prompt → Groq
+          LangChain prompt → Gemini
                     ↓
        Answer + retrieved evidence + source links
 ```
@@ -72,7 +72,7 @@ Public sports-medicine and public-health sources
 ## LangChain usage
 
 1. `raglab/ingestion.py` uses LangChain `Document` and `RecursiveCharacterTextSplitter`.
-2. `raglab/generation.py` uses `ChatPromptTemplate | ChatGroq | StrOutputParser`.
+2. `raglab/generation.py` uses `ChatPromptTemplate | ChatGemini | StrOutputParser`.
 
 The embedding and retrieval functions remain small Python functions so beginners can inspect the pipeline.
 
@@ -88,7 +88,7 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Set `GROQ_API_KEY` in Streamlit Community Cloud Secrets or as an environment variable for generated answers. Never commit the key to GitHub. Without it, the app displays retrieved evidence only.
+Create a free Gemini API key in [Google AI Studio](https://aistudio.google.com/app/apikey), then add `GEMINI_API_KEY = "your-key"` under Streamlit Community Cloud → App settings → Secrets. You can also set `GEMINI_API_KEY` as a local environment variable. Never commit the key to GitHub. Without it, the app displays retrieved evidence only.
 
 ## Evaluation
 
