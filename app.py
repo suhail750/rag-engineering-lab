@@ -106,7 +106,7 @@ with st.sidebar:
     )
     groq_key = st.text_input(
         "Groq API key (optional)",
-        os.getenv("GROQ_API_KEY", ""),
+        os.getenv("GROQ_API_KEY", st.secrets.get("GROQ_API_KEY", "")),
         type="password",
     )
     groq_model = st.text_input("Groq model", "openai/gpt-oss-120b")
@@ -115,7 +115,7 @@ with st.sidebar:
         st.session_state.messages = []
         st.rerun()
 
-    st.caption("The assistant searches only the shared RAG Engineering Lab knowledge base. It does not diagnose or replace a clinician.")
+    st.caption("Answers are based on the shared RAG Engineering Lab knowledge base. Add a Groq API key in Streamlit Secrets for generated explanations.")
 
 active_chunks = [
     item for item in chunks
@@ -129,7 +129,7 @@ ask_tab, knowledge_tab, evaluation_tab, about_tab = st.tabs(
 with ask_tab:
     st.subheader("Ask anything about RAG engineering")
     st.write(
-        "Ask about common injuries, symptoms, prevention, rehabilitation principles, concussion, heat illness, and return to sport. "
+        "Ask about how RAG works, embeddings, chunking, vector databases, retrieval, hybrid search, reranking, evaluation, and production systems. "
         "Answers are grounded in retrieved passages from this knowledge base."
     )
 
@@ -304,6 +304,5 @@ with about_tab:
         "With a key, it generates an answer using only the retrieved context."
     )
     st.warning(
-        "This is an educational information tool, not a medical device. It cannot diagnose injuries, prescribe treatment, or clear anyone to play. For urgent warning signs, seek medical care. Retrieved sources can be incomplete "
-        "so inspect the evidence and original links."
+        "This is a learning tool. Answers can be incomplete, so inspect the retrieved evidence and original source links."
     )
