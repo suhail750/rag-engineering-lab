@@ -35,7 +35,7 @@ st.markdown("""
 
 def get_streamlit_secret():
     try:
-        return st.secrets.get("GROQ_API_KEY", "")
+        return st.secrets.get("GEMINI_API_KEY", "") or st.secrets.get("GOOGLE_API_KEY", "")
     except Exception:
         return ""
 
@@ -111,18 +111,18 @@ with st.sidebar:
         sources,
         default=sources,
     )
-    groq_key = st.text_input(
-        "Groq API key (optional)",
-        os.getenv("GROQ_API_KEY", "") or get_streamlit_secret(),
+    gemini_key = st.text_input(
+        "Gemini API key (optional)",
+        os.getenv("GEMINI_API_KEY", "") or os.getenv("GOOGLE_API_KEY", "") or get_streamlit_secret(),
         type="password",
     )
-    groq_model = st.text_input("Groq model", "openai/gpt-oss-120b")
+    gemini_model = st.text_input("Gemini model", "gemini-2.5-flash")
 
     if st.button("Clear chat"):
         st.session_state.messages = []
         st.rerun()
 
-    st.caption("This assistant answers from the shared sports-health knowledge base. Add GROQ_API_KEY in Streamlit Secrets for generated explanations.")
+    st.caption("This assistant answers from the shared sports-health knowledge base. Add GEMINI_API_KEY in Streamlit Secrets for generated explanations.")
 
 active_chunks = [
     item for item in chunks
@@ -185,8 +185,8 @@ with ask_tab:
                 response = answer_question(
                     question,
                     results,
-                    api_key=groq_key,
-                    model=groq_model,
+                    api_key=gemini_key,
+                    model=gemini_model,
                 )
 
                 st.markdown(response["answer"])
@@ -302,12 +302,12 @@ with about_tab:
     4. **Embeddings:** Sentence Transformers converts passages and questions into vectors.
     5. **Retrieval:** Dense, BM25, or Hybrid search finds relevant passages.
     6. **Reranking:** an optional cross-encoder can reorder the retrieved passages.
-    7. **Generation:** a LangChain prompt sends the question and evidence to Groq.
+    7. **Generation:** a LangChain prompt sends the question and evidence to Gemini.
     8. **Citations:** the app displays the retrieved passages and links to their original sources.
     """)
 
     st.info(
-        "Without a Groq API key, the app shows the most relevant retrieved passages. "
+        "Without a Gemini API key, the app shows the most relevant retrieved passages. "
         "With a key, it generates an answer using only the retrieved context."
     )
     st.warning(
