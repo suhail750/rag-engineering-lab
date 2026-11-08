@@ -1,40 +1,48 @@
-# Injury prevention, rehabilitation, and return to sport
+# RAG evaluation, metrics, and production
 
-Injury prevention is not a guarantee that an athlete will never be injured. A sensible programme aims to reduce modifiable risks and improve the athlete's ability to tolerate sport demands.
+A RAG system has two connected quality problems: did search find the right evidence, and did the LLM use that evidence correctly? Evaluate both.
 
-## Prevention principles
+## Retrieval metrics
+- **Precision@k:** fraction of the top-k results that are relevant.
+- **Recall@k:** fraction of all known relevant results found in the top-k.
+- **Hit Rate@k:** proportion of questions where at least one relevant result appears in top-k.
+- **MRR:** rewards finding the first relevant result near the top.
+- **nDCG:** rewards highly relevant results appearing earlier and supports graded relevance.
 
-- Prepare for the sport with an appropriate warm-up and sport-specific movement.
-- Build strength, balance, coordination, and conditioning progressively.
-- Increase training load gradually and include recovery.
-- Use suitable footwear and protective equipment for the sport and playing surface.
-- Maintain access to water, shade, first aid, and an emergency action plan.
-- Report pain, swelling, dizziness, head impacts, and unusual fatigue early.
-- Adapt training to age, experience, previous injury, health, and environmental conditions.
+Example: if 4 of the first 5 passages are relevant, Precision@5 = 4/5 = 0.8. If there are 8 relevant passages in the corpus and 4 were retrieved, Recall@5 = 4/8 = 0.5.
 
-For football, AAOS recommends preparation that includes fitness, warm-up, suitable field conditions, hydration, weather awareness, and emergency readiness. Other sports need sport-specific adaptations.
+## Answer metrics and checks
+Retrieval scores do not prove that the final answer is correct. Evaluate:
+- **Correctness:** does the answer match reliable ground truth?
+- **Faithfulness / groundedness:** are claims supported by retrieved context?
+- **Answer relevance:** does it answer the question?
+- **Completeness:** does it cover the important parts?
+- **Citation accuracy:** do citations support the claims?
+- **Safety:** does it avoid unsafe or unsupported advice?
 
-## Rehabilitation is individual
+## Three evaluation approaches
+- **Deterministic:** exact match, token overlap, precision, recall, MRR, nDCG, schema checks, latency, and cost. Repeatable, but may not understand meaning.
+- **Model-based:** an evaluator model scores faithfulness, relevance, or correctness using a rubric. Scalable, but can be inconsistent or biased.
+- **Human-based:** people judge usefulness, correctness, clarity, and safety. Context-aware, but takes time and needs clear rubrics.
 
-A rehabilitation plan should be tailored to the injury, the athlete, and their goals. It may include education, graded activity, mobility, strength, balance, sport-specific drills, and psychological support. The dose and progression should be determined by qualified clinicians and adjusted based on response.
+Use a combination; no single metric fully describes RAG quality.
 
-A generic online exercise list cannot safely replace an assessment. The same exercise may be appropriate at one stage and unsuitable at another.
+## Production checklist
+- Monitor ingestion failures, empty retrieval, latency, token usage, and model errors.
+- Track document freshness and remove outdated or duplicate content.
+- Enforce user permissions before returning content.
+- Record source IDs and retrieval scores without exposing sensitive data unnecessarily.
+- Test prompt injection in documents and user questions.
+- Re-run evaluation after changing chunking, embeddings, top-k, reranking, prompts, or models.
 
-## Return to sport is a process, not a date
+## Improvement loop
+1. Save realistic user questions.
+2. Inspect retrieved passages when answers fail.
+3. Identify whether the problem is ingestion, chunking, embeddings, retrieval, reranking, or generation.
+4. Change one component at a time.
+5. Re-run the same evaluation set.
+6. Compare quality, latency, and cost.
 
-Return to sport is commonly viewed as a continuum:
-1. Return to participation: modified or limited training.
-2. Return to sport: resuming the sport, often with restrictions or monitoring.
-3. Return to performance: rebuilding toward the athlete's previous performance level.
-
-Decisions consider the injury or illness, healing, pain and swelling, strength, range of motion, function, sport demands, psychological readiness, and the clinician's assessment. There is no single timeline that fits everyone.
-
-Do not return simply because a match is important or because pain temporarily improves. Seek reassessment if symptoms return during progression.
-
-## Sources
-
-- Team Physician Consensus Statement: Return to Sport/Return to Play (2023 update, published 2024): https://doi.org/10.1249/mss.0000000000003371
-- NICE, Rehabilitation after traumatic injury: https://www.nice.org.uk/guidance/ng211/chapter/Recommendations
-- AAOS OrthoInfo, Soccer Injury Prevention: https://www.orthoinfo.org/staying-healthy/soccer-injury-prevention
-
-Educational summary only. A qualified healthcare professional should guide injury-specific rehabilitation and clearance.
+Sources:
+- https://learn.microsoft.com/en-us/azure/architecture/ai-ml/guide/rag/rag-information-retrieval
+- https://arxiv.org/abs/2005.11401
