@@ -1,13 +1,13 @@
 {
-  "pack_name": "Sports Health & Injury Knowledge Pack",
-  "pack_version": "1.0.0",
-  "curation_note": "Original educational summaries based on the public sports-medicine and public-health sources listed here. These notes do not diagnose injuries or replace a clinician's advice.",
+  "pack_name": "RAG Engineering Knowledge Pack",
+  "pack_version": "2.0.0",
+  "curation_note": "Beginner-friendly learning notes synthesised from the public technical references listed below. Open the source links for full documentation and research.",
   "documents": [
-    {"file": "01_rag_fundamentals.md", "title": "Common sports injuries, symptoms, and red flags", "source_url": "https://www.sportsmed.org/prevention-care-of-soccer-injuries", "publisher": "American Orthopaedic Society for Sports Medicine", "source_type": "sports medicine guidance"},
-    {"file": "02_chunking_and_metadata.md", "title": "Ankle and knee injuries", "source_url": "https://www.sportsmed.org/prevention-care-of-soccer-injuries", "publisher": "American Orthopaedic Society for Sports Medicine", "source_type": "sports medicine guidance"},
-    {"file": "03_dense_and_bm25_retrieval.md", "title": "Muscle strains, tendon pain, and overuse injuries", "source_url": "https://www.orthoinfo.org/staying-healthy/soccer-injury-prevention", "publisher": "AAOS OrthoInfo", "source_type": "clinical education"},
-    {"file": "04_hybrid_search_rrf.md", "title": "Concussion and return-to-sport safety", "source_url": "https://www.cdc.gov/heads-up/guidelines/returning-to-sports.html", "publisher": "US Centers for Disease Control and Prevention", "source_type": "public health guidance"},
-    {"file": "05_reranking.md", "title": "Heat illness and hydration", "source_url": "https://www.cdc.gov/extreme-heat/risk-factors/extreme-heat-and-athletes.html", "publisher": "US Centers for Disease Control and Prevention", "source_type": "public health guidance"},
-    {"file": "06_rag_evaluation.md", "title": "Injury prevention, rehabilitation, and return to sport", "source_url": "https://doi.org/10.1249/mss.0000000000003371", "publisher": "Medicine & Science in Sports & Exercise consensus statement", "source_type": "consensus statement"}
+    {"file": "01_rag_fundamentals.md", "title": "RAG fundamentals and end-to-end architecture", "source_url": "https://learn.microsoft.com/azure/ai-studio/concepts/retrieval-augmented-generation", "publisher": "Microsoft Learn", "source_type": "technical documentation"},
+    {"file": "02_chunking_and_metadata.md", "title": "Data ingestion, chunking, metadata, and embeddings", "source_url": "https://www.mongodb.com/docs/vector-search/tutorials/rag/", "publisher": "MongoDB Documentation", "source_type": "technical documentation"},
+    {"file": "03_dense_and_bm25_retrieval.md", "title": "Dense retrieval, sparse retrieval, and BM25", "source_url": "https://www.pinecone.io/learn/series/rag/", "publisher": "Pinecone Learn", "source_type": "technical learning resource"},
+    {"file": "04_hybrid_search_rrf.md", "title": "Hybrid search, reciprocal rank fusion, and query strategies", "source_url": "https://www.pinecone.io/learn/retrieval-augmented-generation/", "publisher": "Pinecone Learn", "source_type": "technical learning resource"},
+    {"file": "05_reranking.md", "title": "Reranking, context assembly, and grounded generation", "source_url": "https://www.pinecone.io/learn/series/rag/rerankers/", "publisher": "Pinecone Learn", "source_type": "technical learning resource"},
+    {"file": "06_rag_evaluation.md", "title": "RAG evaluation, metrics, and production considerations", "source_url": "https://learn.microsoft.com/en-us/azure/architecture/ai-ml/guide/rag/rag-information-retrieval", "publisher": "Microsoft Azure Architecture Center", "source_type": "technical guidance"}
   ]
 }
