@@ -45,7 +45,16 @@ class EvaluationTests(unittest.TestCase):
         ], k=2)
         self.assertAlmostEqual(result["hit_rate"], 1.0)
         self.assertAlmostEqual(result["recall"], 1.0)
+        self.assertAlmostEqual(result["precision"], 0.5)
         self.assertAlmostEqual(result["mrr"], 0.75)
+        self.assertAlmostEqual(result["ndcg"], 0.8154648768, places=6)
+
+    def test_empty_rows(self):
+        self.assertEqual(evaluate_retrieval([], k=3)["mrr"], 0.0)
+
+    def test_invalid_k(self):
+        with self.assertRaises(ValueError):
+            evaluate_retrieval([], k=0)
 
 
 if __name__ == "__main__":
