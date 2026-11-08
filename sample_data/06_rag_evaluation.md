@@ -1,38 +1,40 @@
-# Evaluating retrieval and generated answers
+# Injury prevention, rehabilitation, and return to sport
 
-A RAG system has multiple components, so one score cannot describe its full quality. Evaluate retrieval, generation, safety, and operational performance separately.
+Injury prevention is not a guarantee that an athlete will never be injured. A sensible programme aims to reduce modifiable risks and improve the athlete's ability to tolerate sport demands.
 
-## Retrieval metrics
+## Prevention principles
 
-- Hit Rate@k: fraction of queries for which at least one relevant result appears in the top k.
-- Recall@k: fraction of all labelled relevant documents retrieved in the top k, averaged over queries.
-- Precision@k: fraction of the top k retrieved results that are relevant.
-- Mean Reciprocal Rank (MRR): average reciprocal rank of the first relevant result.
-- nDCG@k: ranking metric that rewards placing highly relevant results near the top and can account for graded relevance.
+- Prepare for the sport with an appropriate warm-up and sport-specific movement.
+- Build strength, balance, coordination, and conditioning progressively.
+- Increase training load gradually and include recovery.
+- Use suitable footwear and protective equipment for the sport and playing surface.
+- Maintain access to water, shade, first aid, and an emergency action plan.
+- Report pain, swelling, dizziness, head impacts, and unusual fatigue early.
+- Adapt training to age, experience, previous injury, health, and environmental conditions.
 
-Metrics require a labelled query set with relevance judgements. Source-level labels are a useful starting point, but chunk-level relevance labels provide a more precise view of passage retrieval.
+For football, AAOS recommends preparation that includes fitness, warm-up, suitable field conditions, hydration, weather awareness, and emergency readiness. Other sports need sport-specific adaptations.
 
-## Generation quality
+## Rehabilitation is individual
 
-Evaluate generated answers separately for:
-- Correctness against a trusted reference answer.
-- Faithfulness to the retrieved evidence.
-- Completeness of the answer.
-- Citation correctness: whether each citation supports the associated claim.
-- Appropriate abstention when evidence is missing.
+A rehabilitation plan should be tailored to the injury, the athlete, and their goals. It may include education, graded activity, mobility, strength, balance, sport-specific drills, and psychological support. The dose and progression should be determined by qualified clinicians and adjusted based on response.
 
-Human review is important for high-impact use cases. Automated model-based judges can help scale evaluation, but judge outputs should be calibrated against human-labelled examples.
+A generic online exercise list cannot safely replace an assessment. The same exercise may be appropriate at one stage and unsuitable at another.
 
-## System performance
+## Return to sport is a process, not a date
 
-Track latency by stage, model/provider, token usage, embedding cost, retrieval depth, errors, and cache hit rate. A quality improvement may not be worthwhile if it makes the system too slow or expensive for the intended workload.
+Return to sport is commonly viewed as a continuum:
+1. Return to participation: modified or limited training.
+2. Return to sport: resuming the sport, often with restrictions or monitoring.
+3. Return to performance: rebuilding toward the athlete's previous performance level.
 
-## Experimental discipline
+Decisions consider the injury or illness, healing, pain and swelling, strength, range of motion, function, sport demands, psychological readiness, and the clinician's assessment. There is no single timeline that fits everyone.
 
-Keep a fixed evaluation dataset. Change one major variable at a time where possible. Record configuration, dataset version, and results so experiments can be reproduced. Avoid reporting a metric without explaining the dataset and evaluation method.
+Do not return simply because a match is important or because pain temporarily improves. Seek reassessment if symptoms return during progression.
 
-## Source
+## Sources
 
-Paraphrased learning note informed by:
-- Sentence Transformers, *InformationRetrievalEvaluator*: https://sbert.net/docs/package_reference/sentence_transformer/evaluation.html
-- Sentence Transformers, *ReciprocalRankFusionEvaluator*: https://www.sbert.net/docs/package_reference/sparse_encoder/evaluation.html
+- Team Physician Consensus Statement: Return to Sport/Return to Play (2023 update, published 2024): https://doi.org/10.1249/mss.0000000000003371
+- NICE, Rehabilitation after traumatic injury: https://www.nice.org.uk/guidance/ng211/chapter/Recommendations
+- AAOS OrthoInfo, Soccer Injury Prevention: https://www.orthoinfo.org/staying-healthy/soccer-injury-prevention
+
+Educational summary only. A qualified healthcare professional should guide injury-specific rehabilitation and clearance.
