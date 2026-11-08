@@ -1,9 +1,12 @@
 [
-  {"question": "What are the main stages of a RAG system?", "relevant_sources": ["01_rag_fundamentals.md"]},
-  {"question": "Why do RAG systems split documents into overlapping chunks?", "relevant_sources": ["02_chunking_and_metadata.md"]},
-  {"question": "How does BM25 differ from dense retrieval?", "relevant_sources": ["03_dense_and_bm25_retrieval.md"]},
-  {"question": "How does Reciprocal Rank Fusion combine ranked lists?", "relevant_sources": ["04_hybrid_search_rrf.md"]},
-  {"question": "Why is a cross-encoder used after initial retrieval?", "relevant_sources": ["05_reranking.md"]},
-  {"question": "What metrics can measure retrieval quality?", "relevant_sources": ["06_rag_evaluation.md"]},
-  {"question": "How should RAG answer faithfulness and citations be evaluated?", "relevant_sources": ["06_rag_evaluation.md", "01_rag_fundamentals.md"]}
+  {"question": "What are common types of sports injuries and which warning signs need urgent assessment?", "relevant_sources": ["01_rag_fundamentals.md"]},
+  {"question": "What symptoms can happen with an ankle sprain and when should an athlete seek medical assessment?", "relevant_sources": ["02_chunking_and_metadata.md", "01_rag_fundamentals.md"]},
+  {"question": "What are possible signs of an ACL injury and can symptoms alone confirm it?", "relevant_sources": ["02_chunking_and_metadata.md"]},
+  {"question": "What is the difference between an acute muscle strain and an overuse injury?", "relevant_sources": ["03_dense_and_bm25_retrieval.md"]},
+  {"question": "What should a player do if a concussion is suspected during a match?", "relevant_sources": ["04_hybrid_search_rrf.md"]},
+  {"question": "What are the six steps in the CDC return-to-sport progression after concussion?", "relevant_sources": ["04_hybrid_search_rrf.md"]},
+  {"question": "What are warning signs of exertional heat stroke in an athlete?", "relevant_sources": ["05_reranking.md", "01_rag_fundamentals.md"]},
+  {"question": "How can athletes reduce the risk of heat illness during training?", "relevant_sources": ["05_reranking.md"]},
+  {"question": "Why is return to sport a process rather than a fixed number of days?", "relevant_sources": ["06_rag_evaluation.md"]},
+  {"question": "What are general ways to reduce sports injury risk?", "relevant_sources": ["06_rag_evaluation.md", "03_dense_and_bm25_retrieval.md"]}
 ]
