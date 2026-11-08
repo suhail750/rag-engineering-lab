@@ -2,7 +2,13 @@ import unittest
 
 from raglab.chunking import chunk_text
 from raglab.evaluation import evaluate_retrieval
+from raglab.ingestion import prepare_chunks
 from raglab.retrieval import bm25_search, reciprocal_rank_fusion
+
+
+class FakeEmbedder:
+    def encode(self, texts):
+        return [[float(len(text)), 1.0] for text in texts]
 
 
 class ChunkingTests(unittest.TestCase):
@@ -18,6 +24,19 @@ class ChunkingTests(unittest.TestCase):
     def test_invalid_overlap(self):
         with self.assertRaises(ValueError):
             chunk_text("hello", chunk_size=10, overlap=10)
+
+
+class IngestionTests(unittest.TestCase):
+    def test_langchain_ingestion_adds_vectors_and_metadata(self):
+        docs = [("notes.pdf", "First paragraph about retrieval.\n\nSecond paragraph about ranking.", {"file_type": "pdf"})]
+        chunks = prepare_chunks(docs, FakeEmbedder(), chunk_size=35, overlap=5)
+        self.assertGreater(len(chunks), 1)
+        self.assertEqual(chunks[0]["source"], "notes.pdf")
+        self.assertEqual(chunks[0]["metadata"]["file_type"], "pdf")
+        self.assertEqual(len(chunks[0]["embedding"]), 2)
+
+    def test_empty_documents(self):
+        self.assertEqual(prepare_chunks([("empty.pdf", "  ", {})], FakeEmbedder()), [])
 
 
 class RetrievalTests(unittest.TestCase):
