@@ -1,7 +1,7 @@
 import unittest
 
 from raglab.chunking import chunk_text
-from raglab.evaluation import evaluate_retrieval
+from raglab.evaluation import evaluate_retrieval, unique_sources_in_rank_order
 from raglab.ingestion import prepare_chunks
 from raglab.retrieval import bm25_search, reciprocal_rank_fusion
 
@@ -57,6 +57,14 @@ class RetrievalTests(unittest.TestCase):
 
 
 class EvaluationTests(unittest.TestCase):
+    def test_source_level_results_remove_duplicate_chunks(self):
+        results = [
+            {"source": "a.md"},
+            {"source": "a.md"},
+            {"source": "b.md"},
+        ]
+        self.assertEqual(unique_sources_in_rank_order(results, 2), ["a.md", "b.md"])
+
     def test_metrics(self):
         result = evaluate_retrieval([
             {"relevant_sources": ["a"], "retrieved_sources": ["a", "b"]},
