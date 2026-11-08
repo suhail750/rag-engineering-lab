@@ -1,222 +1,301 @@
-import json, os, time
+import json
+import os
 from pathlib import Path
+
 import streamlit as st
+
 from raglab.config import APP_TITLE, DEFAULT_CHUNK_OVERLAP, DEFAULT_CHUNK_SIZE
 from raglab.embeddings import EmbeddingService
 from raglab.evaluation import evaluate_retrieval
 from raglab.generation import answer_question
 from raglab.ingestion import prepare_chunks
-from raglab.loaders import load_uploaded_file
 from raglab.retrieval import bm25_search, dense_search, hybrid_search, rerank_results
 
+# Keep paths simple: all learning material lives in sample_data/.
 ROOT_DIR = Path(__file__).resolve().parent
 SAMPLE_DIR = ROOT_DIR / "sample_data"
-MAX_FILES = 5
-MAX_MB = 15
+EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
 st.set_page_config(page_title=APP_TITLE, page_icon="🧪", layout="wide")
+
 st.markdown("""
 <style>
 .block-container {padding-top: 1.5rem; max-width: 1380px;}
-.hero {padding: 2rem; border: 1px solid rgba(139,124,255,.35); border-radius: 22px; background: linear-gradient(120deg, rgba(139,124,255,.16), rgba(35,42,61,.35));}
+.hero {padding: 2rem; border: 1px solid rgba(139,124,255,.35); border-radius: 22px;
+       background: linear-gradient(120deg, rgba(139,124,255,.16), rgba(35,42,61,.35));}
 .hero h1 {font-size: 2.6rem; margin-bottom: .5rem;}
 .hero p {color: #C7CBD6; font-size: 1.05rem;}
 </style>
-<div class="hero"><h1>🧪 RAG Engineering Lab</h1>
-<p>Upload your PDFs, ask questions in plain English, and inspect the evidence behind every answer.</p></div>
+<div class="hero">
+  <h1>🧪 RAG Engineering Lab</h1>
+  <p>Explore how real RAG systems work. Ask questions and inspect the web-sourced evidence behind every answer.</p>
+</div>
 """, unsafe_allow_html=True)
 
-@st.cache_resource(show_spinner="Loading embedding model...")
-def get_embedder(name):
-    return EmbeddingService(name)
 
-def sample_documents():
+def load_web_knowledge():
+    """Read our curated notes and their original public web sources."""
     manifest = json.loads((SAMPLE_DIR / "sources.json").read_text(encoding="utf-8"))
-    result = []
-    for item in manifest.get("documents", []):
-        path = SAMPLE_DIR / item["file"]
-        result.append((item["file"], path.read_text(encoding="utf-8"), {
+    documents = []
+
+    for item in manifest["documents"]:
+        file_path = SAMPLE_DIR / item["file"]
+        text = file_path.read_text(encoding="utf-8")
+
+        metadata = {
             "title": item.get("title", item["file"]),
             "source_url": item.get("source_url", ""),
             "publisher": item.get("publisher", ""),
             "source_type": item.get("source_type", "web reference"),
-        }))
-    return result
+        }
+        documents.append((item["file"], text, metadata))
+
+    return documents
+
+
+@st.cache_resource(show_spinner="Loading the RAG knowledge base...")
+def get_embedder():
+    # Downloaded once and reused by the app.
+    return EmbeddingService(EMBEDDING_MODEL)
+
+
+@st.cache_resource(show_spinner="Preparing web-sourced knowledge for search...")
+def get_knowledge_chunks():
+    # LangChain splits each source note into searchable passages.
+    documents = load_web_knowledge()
+    return prepare_chunks(
+        documents,
+        get_embedder(),
+        DEFAULT_CHUNK_SIZE,
+        DEFAULT_CHUNK_OVERLAP,
+    )
+
 
 def show_evidence(results):
-    for rank, result in enumerate(results, 1):
-        st.markdown(f"**[{rank}] {result.get('source', 'Unknown')}** · score: {result.get('score', 0):.4f}")
-        st.write(result.get("text", ""))
-        metadata = result.get("metadata", {})
-        if metadata.get("source_url"):
-            st.markdown(f"[Original source: {metadata.get('publisher') or 'Open source'}]({metadata['source_url']})")
+    """Show the exact passages that were retrieved for an answer."""
+    for rank, item in enumerate(results, 1):
+        st.markdown(
+            f"**[{rank}] {item.get('source', 'Unknown')}** · "
+            f"score: {item.get('score', 0):.4f}"
+        )
+        st.write(item.get("text", ""))
 
-# Session state is isolated per visitor. Uploaded files are never saved to a shared index.
-if "index" not in st.session_state:
-    st.session_state.index = {"chunks": [], "created_at": None}
+        metadata = item.get("metadata", {})
+        source_url = metadata.get("source_url")
+        if source_url:
+            publisher = metadata.get("publisher") or "Original web source"
+            st.markdown(f"[Read the original {publisher} material]({source_url})")
+
+
+# The corpus is read-only and shared safely; each visitor has their own chat history.
+chunks = get_knowledge_chunks()
+sources = sorted({item.get("source", "unknown") for item in chunks})
+
 if "messages" not in st.session_state:
     st.session_state.messages = []
-if "notice" not in st.session_state:
-    st.session_state.notice = ""
 
-chunks = st.session_state.index["chunks"]
-sources = sorted({item.get("source", "unknown") for item in chunks})
 with st.sidebar:
     st.title("Lab settings")
-    model_name = st.text_input("Embedding model", "sentence-transformers/all-MiniLM-L6-v2")
-    chunk_size = st.slider("Chunk size", 300, 1800, DEFAULT_CHUNK_SIZE, 50)
-    overlap = st.slider("Chunk overlap", 0, 400, DEFAULT_CHUNK_OVERLAP, 25)
-    mode = st.selectbox("Retrieval", ["Hybrid", "Dense", "BM25"])
-    top_k = st.slider("Top-k passages", 1, 12, 5)
-    rerank = st.checkbox("Cross-encoder reranking")
-    selected = st.multiselect("Filter sources", sources, default=sources)
-    groq_key = st.text_input("Groq API key (optional)", os.getenv("GROQ_API_KEY", ""), type="password")
+    retrieval_mode = st.selectbox("Retrieval method", ["Hybrid", "Dense", "BM25"])
+    top_k = st.slider("Passages to retrieve", 1, 12, 5)
+    use_reranker = st.checkbox("Use cross-encoder reranking")
+    selected_sources = st.multiselect(
+        "Limit search to sources",
+        sources,
+        default=sources,
+    )
+    groq_key = st.text_input(
+        "Groq API key (optional)",
+        os.getenv("GROQ_API_KEY", ""),
+        type="password",
+    )
     groq_model = st.text_input("Groq model", "llama-3.3-70b-versatile")
-    if st.button("Clear my documents and chat"):
-        st.session_state.index = {"chunks": [], "created_at": None}
+
+    if st.button("Clear chat"):
         st.session_state.messages = []
-        st.session_state.notice = ""
         st.rerun()
-    st.caption("Documents stay in this temporary session only.")
 
-active = [item for item in chunks if item.get("source") in selected]
-chat_tab, docs_tab, eval_tab, about_tab = st.tabs(["Ask your PDFs", "Knowledge base", "Evaluation", "How it works"])
+    st.caption("The chatbot searches only the project's included knowledge base.")
 
-with chat_tab:
-    st.subheader("Your document assistant")
-    st.write("Upload one or more PDFs, then ask questions about their contents.")
-    uploads = st.file_uploader("Drop PDF files here or browse", type=["pdf"], accept_multiple_files=True,
-                               help=f"Up to {MAX_FILES} PDFs, {MAX_MB} MB each.", key="pdf_upload")
-    if st.button("Process PDFs", type="primary", disabled=not uploads):
-        try:
-            if len(uploads) > MAX_FILES:
-                raise ValueError(f"Maximum {MAX_FILES} PDFs per upload.")
-            docs = []
-            for uploaded in uploads:
-                data = uploaded.getvalue()
-                if len(data) > MAX_MB * 1024 * 1024:
-                    raise ValueError(f"{uploaded.name} exceeds {MAX_MB} MB.")
-                body, metadata = load_uploaded_file(uploaded.name, data)
-                if not body.strip():
-                    raise ValueError(f"No selectable text found in {uploaded.name}. Scanned PDFs need OCR.")
-                if len(body) > 2_000_000:
-                    raise ValueError(f"{uploaded.name} contains too much text for this demo.")
-                docs.append((uploaded.name, body, metadata))
-            with st.spinner("Extracting, chunking, and embedding PDFs..."):
-                added = prepare_chunks(docs, get_embedder(model_name), chunk_size, overlap)
-            if not added:
-                raise ValueError("No text passages were created.")
-            replace = {name for name, _, _ in docs}
-            keep = [item for item in chunks if item.get("source") not in replace]
-            st.session_state.index = {"chunks": keep + added, "created_at": time.time()}
-            st.session_state.notice = f"Ready: {len(added)} passages from {len(docs)} PDF(s)."
-            st.rerun()
-        except Exception as exc:
-            st.error(f"PDF processing failed: {exc}")
-    if st.session_state.notice:
-        st.success(st.session_state.notice)
-    if not active:
-        st.info("Upload a PDF above or load the free RAG learning pack in Knowledge base.")
-    else:
-        cols = st.columns(3)
-        cols[0].metric("Passages", len(active))
-        cols[1].metric("Documents", len({item.get("source") for item in active}))
-        cols[2].metric("Retrieval", mode)
+active_chunks = [
+    item for item in chunks
+    if item.get("source", "unknown") in selected_sources
+]
+
+ask_tab, knowledge_tab, evaluation_tab, about_tab = st.tabs(
+    ["Ask the Lab", "Knowledge base", "Evaluation", "How it works"]
+)
+
+with ask_tab:
+    st.subheader("Ask questions about RAG engineering")
+    st.write(
+        "Ask about the concepts and techniques covered by our curated web-source notes. "
+        "Answers are grounded in retrieved passages from this knowledge base."
+    )
+
+    metric_cols = st.columns(3)
+    metric_cols[0].metric("Knowledge passages", len(active_chunks))
+    metric_cols[1].metric("Source notes", len(selected_sources))
+    metric_cols[2].metric("Retrieval", retrieval_mode)
+
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
             if message.get("sources"):
-                with st.expander("Retrieved evidence"):
+                with st.expander("Inspect retrieved evidence"):
                     show_evidence(message["sources"])
-    question = st.chat_input("Ask a question about your PDFs...", disabled=not active)
+
+    question = st.chat_input("For example: When should I use hybrid search?")
     if question:
         st.session_state.messages.append({"role": "user", "content": question})
+
         with st.chat_message("user"):
             st.markdown(question)
+
         with st.chat_message("assistant"):
             try:
-                vector = get_embedder(model_name).encode([question])[0]
-                if mode == "Dense":
-                    results = dense_search(vector, active, top_k=top_k)
-                elif mode == "BM25":
-                    results = bm25_search(question, active, top_k=top_k)
+                query_vector = get_embedder().encode([question])[0]
+
+                if retrieval_mode == "Dense":
+                    results = dense_search(query_vector, active_chunks, top_k=top_k)
+                elif retrieval_mode == "BM25":
+                    results = bm25_search(question, active_chunks, top_k=top_k)
                 else:
-                    results = hybrid_search(question, vector, active, top_k=top_k)
-                if rerank and results:
+                    results = hybrid_search(
+                        question,
+                        query_vector,
+                        active_chunks,
+                        top_k=top_k,
+                    )
+
+                if use_reranker and results:
                     results = rerank_results(question, results, top_k=top_k)
-                answer = answer_question(question, results, api_key=groq_key, model=groq_model)
-                st.markdown(answer["answer"])
-                st.caption(f"{mode} retrieval · {len(results)} passages · {answer['mode']}")
-                with st.expander("Inspect evidence", expanded=True):
+
+                response = answer_question(
+                    question,
+                    results,
+                    api_key=groq_key,
+                    model=groq_model,
+                )
+
+                st.markdown(response["answer"])
+                st.caption(
+                    f"{retrieval_mode} retrieval · {len(results)} passages · "
+                    f"{response['mode']}"
+                )
+
+                with st.expander("Inspect retrieved evidence", expanded=True):
                     show_evidence(results)
-                st.session_state.messages.append({"role": "assistant", "content": answer["answer"], "sources": results})
-            except Exception as exc:
-                st.error(f"Could not answer: {exc}")
 
-with docs_tab:
-    st.subheader("Free RAG learning pack")
-    st.write("Six curated notes explain RAG, chunking, retrieval, hybrid search, reranking, and evaluation.")
-    if st.button("Load free learning pack", type="primary"):
-        try:
-            with st.spinner("Building your session knowledge base..."):
-                docs = sample_documents()
-                added = prepare_chunks(docs, get_embedder(model_name), chunk_size, overlap)
-            replace = {name for name, _, _ in docs}
-            keep = [item for item in chunks if item.get("source") not in replace]
-            st.session_state.index = {"chunks": keep + added, "created_at": time.time()}
-            st.session_state.notice = f"Loaded {len(docs)} notes into {len(added)} passages."
-            st.success(st.session_state.notice)
-            st.rerun()
-        except Exception as exc:
-            st.error(f"Could not load starter pack: {exc}")
-    for source in sources:
-        selected_chunks = [item for item in chunks if item.get("source") == source]
-        with st.expander(f"{source} · {len(selected_chunks)} passages"):
-            st.text(selected_chunks[0].get("text", "")[:1000])
-            metadata = selected_chunks[0].get("metadata", {})
-            if metadata.get("source_url"):
-                st.markdown(f"[Original source]({metadata['source_url']})")
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": response["answer"],
+                    "sources": results,
+                })
 
-with eval_tab:
-    st.subheader("Retrieval evaluation")
-    eval_path = SAMPLE_DIR / "evaluation.json"
-    if eval_path.exists():
-        st.download_button("Download starter evaluation JSON", eval_path.read_text(encoding="utf-8"),
-                           "rag_evaluation.json", "application/json")
-    eval_file = st.file_uploader("Evaluation dataset", type=["json"], key="eval_upload")
-    if eval_file and st.button("Run evaluation", disabled=not active):
+            except Exception as error:
+                st.error(f"Something went wrong while answering: {error}")
+
+
+with knowledge_tab:
+    st.subheader("What's inside our knowledge base?")
+    st.write(
+        "The notes are original, beginner-friendly summaries based on public research "
+        "papers and technical documentation. Open the original links to read the source material."
+    )
+
+    manifest = json.loads((SAMPLE_DIR / "sources.json").read_text(encoding="utf-8"))
+    for source in manifest["documents"]:
+        with st.expander(source.get("title", source["file"])):
+            st.caption(f"File: {source['file']}")
+            st.caption(f"Publisher: {source.get('publisher', 'Public source')}")
+            st.markdown(f"[Open original web source]({source.get('source_url', '')})")
+
+    st.divider()
+    st.markdown("**Topics covered**")
+    st.markdown(
+        "- RAG fundamentals and the indexing/query workflows\n"
+        "- Document chunking and metadata\n"
+        "- Dense retrieval and BM25\n"
+        "- Hybrid search and Reciprocal Rank Fusion\n"
+        "- Retrieve-then-rerank pipelines\n"
+        "- Retrieval and answer evaluation"
+    )
+
+
+with evaluation_tab:
+    st.subheader("Test retrieval quality")
+    st.write(
+        "Run the evaluation questions included with this repository. "
+        "This tests retrieval against labelled source notes; it does not grade the generated answer."
+    )
+
+    if st.button("Run the built-in evaluation", type="primary"):
         try:
-            cases = json.loads(eval_file.getvalue().decode("utf-8"))
-            rows = []
-            embedder = get_embedder(model_name)
+            cases = json.loads(
+                (SAMPLE_DIR / "evaluation.json").read_text(encoding="utf-8")
+            )
+            evaluation_rows = []
+
             for case in cases:
-                vector = embedder.encode([case["question"]])[0]
-                if mode == "Dense":
-                    found = dense_search(vector, active, top_k=top_k)
-                elif mode == "BM25":
-                    found = bm25_search(case["question"], active, top_k=top_k)
+                question_text = case["question"]
+                vector = get_embedder().encode([question_text])[0]
+
+                if retrieval_mode == "Dense":
+                    found = dense_search(vector, active_chunks, top_k=top_k)
+                elif retrieval_mode == "BM25":
+                    found = bm25_search(question_text, active_chunks, top_k=top_k)
                 else:
-                    found = hybrid_search(case["question"], vector, active, top_k=top_k)
-                rows.append({"relevant_sources": case["relevant_sources"],
-                             "retrieved_sources": [item.get("source") for item in found]})
-            metrics = evaluate_retrieval(rows, k=top_k)
-            cols = st.columns(5)
-            for col, label, key in zip(cols, ["Hit Rate", "Recall", "Precision", "MRR", "nDCG"],
-                                       ["hit_rate", "recall", "precision", "mrr", "ndcg"]):
-                col.metric(f"{label}@{top_k}", f"{metrics[key]:.3f}")
-        except Exception as exc:
-            st.error(f"Evaluation failed: {exc}")
+                    found = hybrid_search(
+                        question_text,
+                        vector,
+                        active_chunks,
+                        top_k=top_k,
+                    )
+
+                evaluation_rows.append({
+                    "relevant_sources": case["relevant_sources"],
+                    "retrieved_sources": [
+                        item.get("source") for item in found
+                    ],
+                })
+
+            metrics = evaluate_retrieval(evaluation_rows, k=top_k)
+
+            columns = st.columns(5)
+            metric_names = [
+                ("Hit Rate", "hit_rate"),
+                ("Recall", "recall"),
+                ("Precision", "precision"),
+                ("MRR", "mrr"),
+                ("nDCG", "ndcg"),
+            ]
+
+            for column, (label, key) in zip(columns, metric_names):
+                column.metric(f"{label}@{top_k}", f"{metrics[key]:.3f}")
+
+        except Exception as error:
+            st.error(f"Evaluation failed: {error}")
+
 
 with about_tab:
-    st.subheader("How the RAG pipeline works")
+    st.subheader("How this RAG app works")
     st.markdown("""
-    1. Upload a PDF into your private browser session.
-    2. pypdf extracts readable text and page markers.
-    3. LangChain splits the text into overlapping passages.
-    4. Sentence Transformers creates embeddings.
-    5. Dense, BM25, or hybrid retrieval finds relevant passages.
-    6. LangChain connects a prompt to Groq for grounded answers.
-    7. The app shows the evidence passages used for the answer.
+    1. **Web research:** we maintain a small collection of public technical sources.
+    2. **Knowledge notes:** the source material is rewritten as concise learning notes, with original URLs kept as metadata.
+    3. **Chunking:** LangChain's text splitter breaks notes into searchable passages.
+    4. **Embeddings:** Sentence Transformers converts passages and questions into vectors.
+    5. **Retrieval:** Dense, BM25, or Hybrid search finds relevant passages.
+    6. **Reranking:** an optional cross-encoder can reorder the retrieved passages.
+    7. **Generation:** a LangChain prompt sends the question and evidence to Groq.
+    8. **Citations:** the app displays the retrieved passages and links to their original sources.
     """)
-    st.info("Each visitor has a separate in-memory index. Uploaded documents are not written to a shared file. Session data is temporary.")
-    st.warning("This is an educational public demo, not a hardened production service. Add rate limits and abuse monitoring before large-scale use. Do not upload confidential files. Scanned PDFs need OCR.")
+
+    st.info(
+        "Without a Groq API key, the app shows the most relevant retrieved passages. "
+        "With a key, it generates an answer using only the retrieved context."
+    )
+    st.warning(
+        "This is an educational RAG demonstration. Retrieved sources can still be incomplete "
+        "or wrong, so inspect the evidence and original links."
+    )
